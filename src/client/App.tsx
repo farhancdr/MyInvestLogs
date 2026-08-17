@@ -21,7 +21,7 @@ import { BusinessForm, InvestmentForm, TransactionForm } from '@/components/form
 import type { Business, InvestmentMetrics, Page } from '@shared/types.ts';
 
 type Dialog =
-  | { kind: 'business' }
+  | { kind: 'business'; business?: Business }
   | { kind: 'investment'; businessId?: string }
   | { kind: 'transaction'; investmentId?: string }
   | null;
@@ -66,7 +66,8 @@ export function App() {
       case 'business':
         return route.id
           ? <BusinessDetail key={`${route.id}-${version}`} id={route.id}
-              onAddInvestment={(businessId) => setDialog({ kind: 'investment', businessId })} />
+              onAddInvestment={(businessId) => setDialog({ kind: 'investment', businessId })}
+              onEdit={(business) => setDialog({ kind: 'business', business })} />
           : null;
       case 'investments':
         return <Investments key={version} onAddInvestment={() => setDialog({ kind: 'investment' })} />;
@@ -166,7 +167,11 @@ export function App() {
       <main className="mx-auto max-w-[1240px] p-4 sm:p-6">{page}</main>
 
       {dialog?.kind === 'business' && (
-        <BusinessForm onClose={() => setDialog(null)} onSaved={refresh} />
+        <BusinessForm
+          business={dialog.business}
+          onClose={() => setDialog(null)}
+          onSaved={refresh}
+        />
       )}
 
       {dialog?.kind === 'investment' && (

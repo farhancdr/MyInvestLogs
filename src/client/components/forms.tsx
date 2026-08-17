@@ -34,16 +34,18 @@ function Field({
 }
 
 function Choice({
-  value, onChange, options,
+  value, onChange, options, label,
 }: {
   value: string;
   onChange: (v: string) => void;
   options: readonly string[] | { value: string; label: string }[];
+  /** A Radix trigger cannot be tied to a <label>, so it names itself. */
+  label?: string;
 }) {
   const normalized = options.map((o) => (typeof o === 'string' ? { value: o, label: o } : o));
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="w-full">
+      <SelectTrigger className="w-full" aria-label={label}>
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
@@ -57,11 +59,33 @@ function Choice({
 
 /* ---------- business ---------- */
 
-export function BusinessForm({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
+/**
+ * Creates a business, or edits one when `business` is supplied. Owner details,
+ * contact and bank instructions change over time, so the same form serves both
+ * rather than trapping them at the moment of first entry.
+ */
+export function BusinessForm({
+  business, onClose, onSaved,
+}: {
+  business?: Business;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const editing = !!business;
+
   const [form, setForm] = useState({
-    name: '', industry: '', owner: '', contact: '',
-    location: '', startDate: '', status: 'Active', stage: 'SME',
-    riskLevel: 'Medium', description: '', paymentInstructions: '',
+    name: business?.name ?? '',
+    industry: business?.industry ?? '',
+    owner: business?.owner ?? '',
+    contact: business?.contact ?? '',
+    location: business?.location ?? '',
+    startDate: business?.startDate ?? '',
+    status: business?.status ?? 'Active',
+    stage: business?.stage ?? 'SME',
+    riskLevel: business?.riskLevel ?? 'Medium',
+    description: business?.description ?? '',
+    paymentInstructions: business?.paymentInstructions ?? '',
+    notes: business?.notes ?? '',
   });
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -70,8 +94,13 @@ export function BusinessForm({ onClose, onSaved }: { onClose: () => void; onSave
   const submit = async () => {
     setSaving(true);
     try {
-      await api.post('/businesses', form);
-      toast.success('Business added');
+      if (editing) {
+        await api.patch(`/businesses/${business!.id}`, form);
+        toast.success('Business updated');
+      } else {
+        await api.post('/businesses', form);
+        toast.success('Business added');
+      }
       onSaved();
       onClose();
     } catch (e) {
@@ -84,7 +113,9 @@ export function BusinessForm({ onClose, onSaved }: { onClose: () => void; onSave
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-[560px]">
-        <DialogHeader><DialogTitle>Add business</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>{editing ? `Edit ${business!.name}` : 'Add business'}</DialogTitle>
+        </DialogHeader>
         <ErrorNotice message={error} />
 
         <div className="space-y-4">
@@ -126,17 +157,17 @@ export function BusinessForm({ onClose, onSaved }: { onClose: () => void; onSave
 
           <div className="grid gap-4 sm:grid-cols-3">
             <Field label="Status">
-              <Choice value={form.status} onChange={(v) => set('status', v)} options={BUSINESS_STATUSES} />
+              <Choice label="Status" value={form.status} onChange={(v) => set('status', v)} options={BUSINESS_STATUSES} />
             </Field>
             <Field label="Stage" hint="How established">
-              <Choice value={form.stage} onChange={(v) => set('stage', v)} options={COMPANY_STAGES} />
+              <Choice label="Stage" value={form.stage} onChange={(v) => set('stage', v)} options={COMPANY_STAGES} />
             </Field>
             <Field label="Risk level" hint="Default for new investments">
-              <Choice value={form.riskLevel} onChange={(v) => set('riskLevel', v)} options={RISK_LEVELS} />
+              <Choice label="Risk level" value={form.riskLevel} onChange={(v) => set('riskLevel', v)} options={RISK_LEVELS} />
             </Field>
           </div>
 
-          <Field label="Where to send money" hint="Account name, number, routing, branch">
+          <Field label="Where to send money" htmlFor="bf-bank" hint="Account name, number, routing, branch">
             <textarea
               id="bf-bank" rows={4}
               className="w-full rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring"
@@ -149,12 +180,16 @@ export function BusinessForm({ onClose, onSaved }: { onClose: () => void; onSave
           <Field label="Description" htmlFor="bf-desc">
             <Input id="bf-desc" value={form.description} onChange={(e) => set('description', e.target.value)} />
           </Field>
+
+          <Field label="Notes" htmlFor="bf-notes">
+            <Input id="bf-notes" value={form.notes} onChange={(e) => set('notes', e.target.value)} />
+          </Field>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button onClick={submit} disabled={saving}>
-            {saving ? 'Saving…' : 'Save business'}
+            {saving ? 'Saving…' : editing ? 'Save changes' : 'Save business'}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -301,7 +336,7 @@ export function InvestmentForm({
           </div>
 
           <Field label="Return model">
-            <Choice value={model} onChange={(v) => set('returnModel', v)} options={RETURN_MODELS} />
+            <Choice label="Return model" value={model} onChange={(v) => set('returnModel', v)} options={RETURN_MODELS} />
           </Field>
 
           {/* Only the fields this model uses are shown, so a stale value cannot
@@ -337,18 +372,18 @@ export function InvestmentForm({
                 disabled={noExpectation} onChange={(e) => set('investmentTerm', e.target.value)} />
             </Field>
             <Field label="Risk level">
-              <Choice value={form.riskLevel} onChange={(v) => set('riskLevel', v)} options={RISK_LEVELS} />
+              <Choice label="Risk level" value={form.riskLevel} onChange={(v) => set('riskLevel', v)} options={RISK_LEVELS} />
             </Field>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Deal structure" hint="Determines your recourse">
-              <Choice value={form.dealStructure}
+              <Choice label="Deal structure" value={form.dealStructure}
                 onChange={(v) => set('dealStructure', v)} options={DEAL_STRUCTURES} />
             </Field>
             {/* Separate from the rate: 2% a month can still pay quarterly. */}
             <Field label="Profit paid" hint="How often you actually receive it">
-              <Choice value={form.payoutCycle}
+              <Choice label="Profit paid" value={form.payoutCycle}
                 onChange={(v) => set('payoutCycle', v)} options={PAYOUT_CYCLE_NAMES} />
             </Field>
           </div>
@@ -376,7 +411,7 @@ export function InvestmentForm({
           </Field>
 
           <Field label="Principal returned at maturity?">
-            <Choice value={form.principalRepayment}
+            <Choice label="Principal returned at maturity" value={form.principalRepayment}
               onChange={(v) => set('principalRepayment', v)} options={['Yes', 'No']} />
           </Field>
 
@@ -518,7 +553,7 @@ export function TransactionForm({
                 onChange={(e) => set('date', e.target.value)} />
             </Field>
             <Field label="Type">
-              <Choice value={form.type} onChange={(v) => set('type', v)}
+              <Choice label="Type" value={form.type} onChange={(v) => set('type', v)}
                 options={[TXN_TYPE.PROFIT, TXN_TYPE.PRINCIPAL_RETURN, TXN_TYPE.INVESTMENT,
                   TXN_TYPE.FEE, TXN_TYPE.LOSS]} />
             </Field>
@@ -530,7 +565,7 @@ export function TransactionForm({
                 onChange={(e) => set('amount', e.target.value)} />
             </Field>
             <Field label="Payment method">
-              <Choice value={form.paymentMethod} onChange={(v) => set('paymentMethod', v)}
+              <Choice label="Payment method" value={form.paymentMethod} onChange={(v) => set('paymentMethod', v)}
                 options={PAYMENT_METHODS} />
             </Field>
           </div>

@@ -100,3 +100,59 @@ test('adjustments cannot themselves be voided', async ({ page }) => {
   await expect(page.locator('tbody tr').first()).toBeVisible();
   await expect(page.locator('tbody tr').first().getByRole('button', { name: 'Void' })).toHaveCount(0);
 });
+
+test('business details can be edited after creation', async ({ page }) => {
+  const businessName = unique('Edit Co');
+
+  await page.goto('/#/businesses');
+  await page.getByRole('button', { name: 'Add business' }).click();
+  await page.getByLabel('Business name').fill(businessName);
+  await page.getByRole('combobox', { name: 'Industry' }).click();
+  await page.getByRole('option', { name: 'Wholesale & Trading' }).click();
+  await page.getByRole('button', { name: 'Save business' }).click();
+  await expect(page.getByText('Business added')).toBeVisible();
+
+  await page.getByRole('cell', { name: businessName }).click();
+  await expect(page.getByRole('heading', { name: businessName })).toBeVisible();
+
+  // Owner, contact and bank details all change over time, so all must be editable.
+  await page.getByRole('button', { name: 'Edit' }).click();
+  await page.getByLabel('Owner / operator').fill('Rahim Uddin');
+  await page.getByLabel('Contact').fill('01711000111');
+  await page.getByLabel('Where to send money').fill('A/C NAME: EDIT CO\nBank: City Bank\nA/C No: 999888777');
+  await page.getByRole('button', { name: 'Save changes' }).click();
+
+  await expect(page.getByText('Business updated')).toBeVisible();
+  await expect(page.getByText('Rahim Uddin')).toBeVisible();
+  await expect(page.getByText('01711000111')).toBeVisible();
+  await expect(page.getByText(/A\/C No: 999888777/)).toBeVisible();
+
+  // And they survive a reload, meaning they were persisted rather than held in state.
+  await page.reload();
+  await expect(page.getByText('Rahim Uddin')).toBeVisible();
+  await expect(page.getByText(/A\/C No: 999888777/)).toBeVisible();
+});
+
+test('the edit form opens pre-filled with what is already recorded', async ({ page }) => {
+  await page.goto('/#/businesses');
+  await page.getByRole('cell', { name: 'Tasnia Knitwear' }).click();
+  await page.getByRole('button', { name: 'Edit' }).click();
+
+  await expect(page.getByLabel('Business name')).toHaveValue('Tasnia Knitwear');
+  await expect(page.getByLabel('Owner / operator')).toHaveValue('Mahmud Hasan');
+  await expect(page.getByLabel('Where to send money')).toHaveValue(/NCC Bank/);
+});
+
+test('a business with no bank details prompts for them', async ({ page }) => {
+  const businessName = unique('Bare Co');
+
+  await page.goto('/#/businesses');
+  await page.getByRole('button', { name: 'Add business' }).click();
+  await page.getByLabel('Business name').fill(businessName);
+  await page.getByRole('combobox', { name: 'Industry' }).click();
+  await page.getByRole('option', { name: 'Other' }).click();
+  await page.getByRole('button', { name: 'Save business' }).click();
+
+  await page.getByRole('cell', { name: businessName }).click();
+  await expect(page.getByText('No account details recorded.')).toBeVisible();
+});

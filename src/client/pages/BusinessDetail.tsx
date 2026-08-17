@@ -1,8 +1,8 @@
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Pencil } from 'lucide-react';
 import { api, useApi } from '@/lib/api.ts';
 import { money, percent, tone } from '@/lib/format.ts';
 import {
-  Panel, PageHeader, StatusBadge, RiskBadge, SummaryItem, Fact, ErrorNotice,
+  Panel, PageHeader, StatusBadge, RiskBadge, SummaryItem, Fact, ErrorNotice, EmptyState,
 } from '@/components/ui.tsx';
 import { InvestmentTable } from '@/components/InvestmentTable.tsx';
 import { TransactionTable } from '@/components/TransactionTable.tsx';
@@ -20,9 +20,10 @@ interface BusinessDetailData {
   investmentStartDate: string | null;
 }
 
-export function BusinessDetail({ id, onAddInvestment }: {
+export function BusinessDetail({ id, onAddInvestment, onEdit }: {
   id: string;
   onAddInvestment: (businessId: string) => void;
+  onEdit: (business: Business) => void;
 }) {
   const { data, error, loading } = useApi<BusinessDetailData>(
     () => api.get(`/businesses/${id}`), [id],
@@ -46,7 +47,14 @@ export function BusinessDetail({ id, onAddInvestment }: {
       <PageHeader
         title={b.name}
         subtitle={<><StatusBadge value={b.status} /><RiskBadge value={b.riskLevel} /></>}
-        actions={<Button variant="outline" onClick={() => onAddInvestment(b.id)}>Add investment</Button>}
+        actions={
+          <>
+            <Button variant="outline" onClick={() => onEdit(b)}>
+              <Pencil /> Edit
+            </Button>
+            <Button variant="outline" onClick={() => onAddInvestment(b.id)}>Add investment</Button>
+          </>
+        }
       />
 
       <Panel>
@@ -75,13 +83,22 @@ export function BusinessDetail({ id, onAddInvestment }: {
         {b.notes && <p className="mt-1.5 text-sm text-muted-foreground">{b.notes}</p>}
       </Panel>
 
-      {b.paymentInstructions && (
-        <Panel title="Where to send money">
+      {/* Shown even when empty, so it is discoverable rather than hidden. */}
+      <Panel title="Where to send money">
+        {b.paymentInstructions ? (
           <pre className="overflow-x-auto whitespace-pre-wrap font-sans text-sm">
             {b.paymentInstructions}
           </pre>
-        </Panel>
-      )}
+        ) : (
+          <EmptyState>
+            No account details recorded.{' '}
+            <button className="text-primary underline-offset-2 hover:underline"
+              onClick={() => onEdit(b)}>Add them
+            </button>{' '}
+            so you are not hunting for them at transfer time.
+          </EmptyState>
+        )}
+      </Panel>
 
       <Panel title="Investments">
         <InvestmentTable rows={data.investments} />
