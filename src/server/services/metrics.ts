@@ -56,7 +56,7 @@ export function investmentMetrics(
     // null for profit share and revenue share, rendered as N/A rather than
     // zero, which would look like infinitely beating expectations.
     expected: calcExpectedReturn(investment),
-    expectedVsActual: calcExpectedVsActual(investment, totals),
+    expectedVsActual: calcExpectedVsActual(investment, totals, today()),
     remainingExpectedProfit: calcRemainingExpectedProfit(investment, totals.profitReceived),
     annualized: calcAnnualizedReturn(transactions, today()),
     transactionCount: transactions.length,

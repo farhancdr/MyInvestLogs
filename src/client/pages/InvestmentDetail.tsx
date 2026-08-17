@@ -100,13 +100,20 @@ export function InvestmentDetail({ id, onAddTransaction }: {
       {/* Profit share and revenue share have no computable expectation. */}
       {e && v ? (
         <Panel title="Expected vs actual">
+          {/* Measured against what has accrued so far. Comparing a young
+              investment to its full-term total reports every one as failing. */}
           <div className="grid gap-x-4 sm:grid-cols-3 lg:grid-cols-5">
-            <SummaryItem label="Expected profit" value={money(e.expectedProfit)} />
+            <SummaryItem label="Expected by now" value={money(v.expectedToDate)} />
             <SummaryItem label="Actual profit" value={money(v.actual)} valueTone={tone(v.actual)} />
             <SummaryItem label="Variance" value={money(v.variance)} valueTone={tone(v.variance)} />
             <SummaryItem label="Of expectation" value={percent(v.performancePct)} />
-            <SummaryItem label="Still expected" value={money(m.remainingExpectedProfit)} />
+            <SummaryItem label="Expected at term" value={money(v.expectedAtTerm)} />
           </div>
+          <p className="mt-3 text-xs text-muted-foreground">
+            {v.monthsElapsed.toFixed(0)} of {inv.investmentTerm ?? '—'} months elapsed
+            {e.payoutsPerYear !== null && e.expectedPerPayout !== null
+              && ` · ${money(e.expectedPerPayout)} due every payout, ${e.payoutsPerYear}× a year`}
+          </p>
         </Panel>
       ) : (
         <Panel>
@@ -134,8 +141,20 @@ export function InvestmentDetail({ id, onAddTransaction }: {
           <Fact label="Monthly return"
             value={inv.monthlyReturnPct !== null ? `${inv.monthlyReturnPct}%` : ''} />
           <Fact label="Expected monthly" value={e ? money(e.expectedMonthlyReturn) : ''} />
+          <Fact label="Deal structure" value={inv.dealStructure} />
+          <Fact label="Profit paid" value={inv.payoutCycle} />
           <Fact label="Principal repaid" value={inv.principalRepayment ? 'Yes' : 'No'} />
           <Fact label="Risk level" value={inv.riskLevel} />
+          <Fact
+            label="Security held"
+            value={inv.security.length ? (
+              <span className="flex flex-wrap gap-1">
+                {inv.security.map((sec) => (
+                  <span key={sec} className="rounded-full border px-2 py-0.5 text-[11px]">{sec}</span>
+                ))}
+              </span>
+            ) : ''}
+          />
           <Fact label="Agreement" value={inv.agreementReference} />
         </div>
         {inv.notes && <p className="mt-3 text-sm text-muted-foreground">{inv.notes}</p>}

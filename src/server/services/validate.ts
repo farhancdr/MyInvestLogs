@@ -10,6 +10,7 @@ import { today, toIsoDate } from './dates.ts';
 import {
   RETURN_MODEL, RETURN_MODELS, TXN_TYPES, ADJUSTMENT_EFFECT, INDUSTRIES,
   BUSINESS_STATUSES, INVESTMENT_STATUSES, RISK_LEVELS, PAYMENT_METHODS,
+  DEAL_STRUCTURES, SECURITY_TYPES, COMPANY_STAGES, PAYOUT_CYCLE_NAMES,
 } from '../../shared/constants.ts';
 import type { ApiError, Investment, Transaction } from '../../shared/types.ts';
 
@@ -57,6 +58,7 @@ export function validateBusiness(data: Record<string, unknown>): void {
   // Chosen from a list so allocation groups cannot fragment on spelling.
   oneOf(data.industry, INDUSTRIES, 'industry');
   if (data.riskLevel) oneOf(data.riskLevel, RISK_LEVELS, 'riskLevel');
+  if (data.stage) oneOf(data.stage, COMPANY_STAGES, 'stage');
   if (data.startDate && !toIsoDate(data.startDate)) {
     fail('startDate must be a valid date.', 'startDate');
   }
@@ -81,6 +83,16 @@ export function validateInvestment(data: Record<string, unknown>, businessExists
   oneOf(data.returnModel, RETURN_MODELS, 'returnModel');
   oneOf(data.status, INVESTMENT_STATUSES, 'status');
   if (data.riskLevel) oneOf(data.riskLevel, RISK_LEVELS, 'riskLevel');
+  if (data.dealStructure) oneOf(data.dealStructure, DEAL_STRUCTURES, 'dealStructure');
+  if (data.payoutCycle) oneOf(data.payoutCycle, PAYOUT_CYCLE_NAMES, 'payoutCycle');
+
+  // Several kinds of security usually apply at once, so this is a list.
+  if (data.security !== undefined) {
+    if (!Array.isArray(data.security)) fail('security must be a list.', 'security');
+    for (const item of data.security as unknown[]) {
+      oneOf(item, SECURITY_TYPES, 'security');
+    }
+  }
 
   validateModelFields(data);
 }

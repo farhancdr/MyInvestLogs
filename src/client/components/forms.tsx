@@ -15,6 +15,7 @@ import {
 import {
   BUSINESS_STATUSES, RISK_LEVELS, PAYMENT_METHODS, INDUSTRIES,
   RETURN_MODELS, RETURN_MODEL, TXN_TYPE,
+  DEAL_STRUCTURES, SECURITY_TYPES, COMPANY_STAGES, PAYOUT_CYCLE_NAMES,
 } from '@shared/constants.ts';
 import type { Business, InvestmentMetrics } from '@shared/types.ts';
 
@@ -59,7 +60,8 @@ function Choice({
 export function BusinessForm({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
   const [form, setForm] = useState({
     name: '', industry: '', owner: '', contact: '',
-    location: '', startDate: '', status: 'Active', riskLevel: 'Medium', description: '',
+    location: '', startDate: '', status: 'Active', stage: 'SME',
+    riskLevel: 'Medium', description: '', paymentInstructions: '',
   });
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -122,14 +124,27 @@ export function BusinessForm({ onClose, onSaved }: { onClose: () => void; onSave
             </Field>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-3">
             <Field label="Status">
               <Choice value={form.status} onChange={(v) => set('status', v)} options={BUSINESS_STATUSES} />
+            </Field>
+            <Field label="Stage" hint="How established">
+              <Choice value={form.stage} onChange={(v) => set('stage', v)} options={COMPANY_STAGES} />
             </Field>
             <Field label="Risk level" hint="Default for new investments">
               <Choice value={form.riskLevel} onChange={(v) => set('riskLevel', v)} options={RISK_LEVELS} />
             </Field>
           </div>
+
+          <Field label="Where to send money" hint="Account name, number, routing, branch">
+            <textarea
+              id="bf-bank" rows={4}
+              className="w-full rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring"
+              value={form.paymentInstructions}
+              onChange={(e) => set('paymentInstructions', e.target.value)}
+              placeholder={'A/C NAME: …\nBank: …\nBranch: …\nA/C No: …\nRouting: …'}
+            />
+          </Field>
 
           <Field label="Description" htmlFor="bf-desc">
             <Input id="bf-desc" value={form.description} onChange={(e) => set('description', e.target.value)} />
@@ -163,7 +178,9 @@ export function InvestmentForm({
     returnModel: RETURN_MODEL.FIXED as string,
     promisedReturnPct: '', monthlyReturnPct: '', expectedMonthlyReturn: '',
     investmentTerm: '12', riskLevel: 'Medium', principalRepayment: 'Yes',
+    dealStructure: 'Trading partner', payoutCycle: 'Monthly',
   });
+  const [security, setSecurity] = useState<string[]>(['Cheque', 'Legal agreement']);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const set = (key: string, value: string) => setForm((f) => ({ ...f, [key]: value }));
@@ -191,7 +208,19 @@ export function InvestmentForm({
         ? (amount * (Number(form.promisedReturnPct) || 0)) / 100
         : monthly * term;
 
-    return { amount, unknown: false as const, monthly, profit, total: amount + profit };
+    const cycleMonths = ({
+      Monthly: 1, 'Every 2 months': 2, Quarterly: 3, 'Every 4 months': 4,
+      'Every 6 months': 6, Annually: 12,
+    } as Record<string, number>)[form.payoutCycle] ?? null;
+
+    const annual = model === RETURN_MODEL.FIXED
+      ? (amount * (Number(form.promisedReturnPct) || 0)) / 100
+      : monthly * 12;
+
+    return {
+      amount, unknown: false as const, monthly, profit, total: amount + profit,
+      perPayout: cycleMonths ? annual * (cycleMonths / 12) : null,
+    };
   }, [form, model, noExpectation]);
 
   const submit = async () => {
@@ -208,6 +237,9 @@ export function InvestmentForm({
           investmentTerm: noExpectation ? '' : form.investmentTerm,
           riskLevel: form.riskLevel,
           principalRepayment: form.principalRepayment === 'Yes',
+          dealStructure: form.dealStructure,
+          payoutCycle: form.payoutCycle,
+          security,
           status: 'Active',
           promisedReturnPct: model === RETURN_MODEL.FIXED ? form.promisedReturnPct : '',
           monthlyReturnPct: model === RETURN_MODEL.MONTHLY ? form.monthlyReturnPct : '',
@@ -309,6 +341,40 @@ export function InvestmentForm({
             </Field>
           </div>
 
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Deal structure" hint="Determines your recourse">
+              <Choice value={form.dealStructure}
+                onChange={(v) => set('dealStructure', v)} options={DEAL_STRUCTURES} />
+            </Field>
+            {/* Separate from the rate: 2% a month can still pay quarterly. */}
+            <Field label="Profit paid" hint="How often you actually receive it">
+              <Choice value={form.payoutCycle}
+                onChange={(v) => set('payoutCycle', v)} options={PAYOUT_CYCLE_NAMES} />
+            </Field>
+          </div>
+
+          <Field label="Security held" hint="What backs the money — usually more than one">
+            <div className="flex flex-wrap gap-2">
+              {SECURITY_TYPES.map((type) => {
+                const on = security.includes(type);
+                return (
+                  <button
+                    key={type}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => setSecurity((cur) =>
+                      cur.includes(type) ? cur.filter((t) => t !== type) : [...cur, type])}
+                    className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                      on ? 'border-primary bg-primary/12 text-primary'
+                        : 'text-muted-foreground hover:bg-foreground/7'}`}
+                  >
+                    {type}
+                  </button>
+                );
+              })}
+            </div>
+          </Field>
+
           <Field label="Principal returned at maturity?">
             <Choice value={form.principalRepayment}
               onChange={(v) => set('principalRepayment', v)} options={['Yes', 'No']} />
@@ -338,8 +404,14 @@ export function InvestmentForm({
                         <span className="text-muted-foreground">Expected monthly return</span>
                         <span>{money(review.monthly)}</span>
                       </div>
+                      {review.perPayout !== null && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Each payout</span>
+                          <span>{money(review.perPayout)}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Expected total profit</span>
+                        <span className="text-muted-foreground">Expected profit over the term</span>
                         <span>{money(review.profit)}</span>
                       </div>
                       <div className="flex justify-between">

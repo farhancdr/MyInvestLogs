@@ -31,6 +31,9 @@ interface InvestmentPlan {
   monthlyPct?: number;
   expectedMonthly?: number;
   risk: Investment['riskLevel'];
+  structure?: Investment['dealStructure'];
+  payoutCycle?: Investment['payoutCycle'];
+  security?: Investment['security'];
   status?: Investment['status'];
   principalRepayment?: boolean;
   profits?: { every: number; count: number; amount: number; shortAt?: number; shortAmount?: number };
@@ -48,6 +51,8 @@ interface BusinessPlan {
   owner: string;
   location: string;
   risk: Business['riskLevel'];
+  stage: Business['stage'];
+  bank?: string;
   status: Business['status'];
   start: string;
   description: string;
@@ -56,12 +61,12 @@ interface BusinessPlan {
 
 const PLAN: BusinessPlan[] = [
   {
-    name: 'Padma Restaurant', industry: 'Food & Beverage',
+    name: 'Padma Restaurant', stage: 'SME', bank: 'A/C NAME: PADMA RESTAURANT\nBank: City Bank PLC\nBranch: Dhanmondi\nA/C No: 1402345678901\nRouting: 225261733', industry: 'Food & Beverage',
     owner: 'Rezaul Karim', location: 'Dhanmondi, Dhaka', risk: 'Medium', status: 'Active',
     start: '2024-11-01', description: 'Casual dining restaurant with 60 covers.',
     investments: [
       {
-        name: 'Padma — opening round', model: RETURN_MODEL.MONTHLY, amount: 500_000,
+        name: 'Padma — opening round', structure: 'Trading partner', payoutCycle: 'Monthly', security: ['Cheque', 'Legal agreement'], model: RETURN_MODEL.MONTHLY, amount: 500_000,
         date: '2025-01-10', term: 18, monthlyPct: 2, risk: 'Medium',
         profits: { every: 1, count: 18, amount: 10_000, shortAt: 9, shortAmount: 6_000 },
         marks: [
@@ -70,19 +75,19 @@ const PLAN: BusinessPlan[] = [
         ],
       },
       {
-        name: 'Padma — second round', model: RETURN_MODEL.FIXED, amount: 300_000,
+        name: 'Padma — second round', structure: 'Mudaraba', payoutCycle: 'Quarterly', security: ['Cheque', 'Legal agreement'], model: RETURN_MODEL.FIXED, amount: 300_000,
         date: '2025-07-15', term: 12, promisedPct: 20, risk: 'Medium',
         profits: { every: 3, count: 4, amount: 15_000 },
       },
     ],
   },
   {
-    name: 'Meghna Trading', industry: 'Import & Export',
+    name: 'Meghna Trading', stage: 'Established', bank: 'A/C NAME: MEGHNA TRADING\nBank: Dutch-Bangla Bank\nBranch: Agrabad\nA/C No: 2271100098765\nRouting: 090150496', industry: 'Import & Export',
     owner: 'Nusrat Jahan', location: 'Chattogram', risk: 'High', status: 'Active',
     start: '2024-06-15', description: 'Commodity import and wholesale distribution.',
     investments: [
       {
-        name: 'Meghna — working capital', model: RETURN_MODEL.PROFIT_SHARE, amount: 600_000,
+        name: 'Meghna — working capital', structure: 'Trading partner', payoutCycle: 'Per trade', security: ['Cheque', 'Guarantor cheque'], model: RETURN_MODEL.PROFIT_SHARE, amount: 600_000,
         date: '2025-03-01', risk: 'High',
         irregular: [
           { offset: 6, amount: 45_000 }, { offset: 12, amount: 62_000 }, { offset: 16, amount: 38_000 },
@@ -92,31 +97,31 @@ const PLAN: BusinessPlan[] = [
     ],
   },
   {
-    name: 'Bengal Textiles', industry: 'Textiles',
+    name: 'Bengal Textiles', stage: 'Established', bank: 'A/C NAME: BENGAL TEXTILES LTD\nBank: BRAC Bank PLC\nBranch: Narayanganj\nA/C No: 2068656930442\nRouting: 060671726', industry: 'Textiles',
     owner: 'Shahidul Alam', location: 'Narayanganj', risk: 'Low', status: 'Active',
     start: '2023-02-01', description: 'Knitwear unit supplying two export houses.',
     investments: [
       {
-        name: 'Bengal — machinery expansion', model: RETURN_MODEL.FIXED, amount: 800_000,
+        name: 'Bengal — machinery expansion', structure: 'Partnership', payoutCycle: 'Every 6 months', security: ['Legal agreement', 'Deed'], model: RETURN_MODEL.FIXED, amount: 800_000,
         date: '2025-01-20', term: 24, promisedPct: 15, risk: 'Low', principalRepayment: true,
         profits: { every: 6, count: 3, amount: 30_000 },
         principal: [{ offset: 12, amount: 200_000 }],
         marks: [{ offset: 18, value: 560_000, note: 'Machinery depreciated; order book thinner' }],
       },
       {
-        name: 'Bengal — dyeing line', model: RETURN_MODEL.CUSTOM, amount: 150_000,
+        name: 'Bengal — dyeing line', structure: 'Lease', payoutCycle: 'Every 2 months', security: ['Legal agreement'], model: RETURN_MODEL.CUSTOM, amount: 150_000,
         date: '2025-10-01', term: 12, expectedMonthly: 4_000, risk: 'Low',
         profits: { every: 2, count: 5, amount: 8_000 },
       },
     ],
   },
   {
-    name: 'Karnaphuli Logistics', industry: 'Transport & Logistics',
+    name: 'Karnaphuli Logistics', stage: 'Emerging', bank: 'A/C NAME: KARNAPHULI LOGISTICS\nBank: NCC Bank\nBranch: Khatunganj\nA/C No: 7021010004411\nRouting: 160151589', industry: 'Transport & Logistics',
     owner: 'Tanvir Hasan', location: 'Chattogram', risk: 'Medium', status: 'Active',
     start: '2025-05-01', description: 'Container haulage between port and inland depots.',
     investments: [
       {
-        name: 'Karnaphuli — fleet share', model: RETURN_MODEL.REVENUE_SHARE, amount: 250_000,
+        name: 'Karnaphuli — fleet share', structure: 'Lease', payoutCycle: 'Quarterly', security: ['Cheque'], model: RETURN_MODEL.REVENUE_SHARE, amount: 250_000,
         date: '2025-09-01', risk: 'Medium',
         irregular: [
           { offset: 4, amount: 18_000 }, { offset: 8, amount: 22_000 }, { offset: 11, amount: 19_000 },
@@ -125,12 +130,12 @@ const PLAN: BusinessPlan[] = [
     ],
   },
   {
-    name: 'Jamuna Electronics', industry: 'Electronics',
+    name: 'Jamuna Electronics', stage: 'Emerging', bank: 'A/C NAME: JAMUNA ELECTRONICS\nBank: Islami Bank\nBranch: Uttara\nA/C No: 20501230100234\nRouting: 125261402', industry: 'Electronics',
     owner: 'Farid Uddin', location: 'Uttara, Dhaka', risk: 'High', status: 'Defaulted',
     start: '2024-09-10', description: 'Consumer electronics retail. Stopped paying in late 2025.',
     investments: [
       {
-        name: 'Jamuna — stock financing', model: RETURN_MODEL.MONTHLY, amount: 400_000,
+        name: 'Jamuna — stock financing', structure: 'Trading partner', payoutCycle: 'Monthly', security: ['Cheque'], model: RETURN_MODEL.MONTHLY, amount: 400_000,
         date: '2025-05-05', term: 12, monthlyPct: 3, risk: 'High', status: 'Defaulted',
         // Pays for four months, then stops. Capital is written off with an
         // explicit Loss: status alone changes no number.
@@ -184,8 +189,10 @@ function seed(): void {
       repo.insertBusiness({
         id: businessId, name: biz.name, industry: biz.industry,
         owner: biz.owner, contact: '+8801700000000', location: biz.location,
-        startDate: biz.start, status: biz.status, description: biz.description,
-        riskLevel: biz.risk, notes: MARKER, createdAt: stamp, updatedAt: stamp,
+        startDate: biz.start, status: biz.status, stage: biz.stage,
+        description: biz.description, riskLevel: biz.risk,
+        paymentInstructions: biz.bank ?? '',
+        notes: MARKER, createdAt: stamp, updatedAt: stamp,
       });
       businesses++;
 
@@ -200,6 +207,9 @@ function seed(): void {
           investmentTerm: spec.term ?? null,
           maturityDate: spec.term ? addMonths(spec.date, spec.term) : null,
           principalRepayment: spec.principalRepayment ?? false,
+          dealStructure: spec.structure ?? 'Trading partner',
+          payoutCycle: spec.payoutCycle ?? 'Monthly',
+          security: spec.security ?? ['Cheque', 'Legal agreement'],
           status: spec.status ?? 'Active', riskLevel: spec.risk,
           agreementReference: '', notes: MARKER, createdAt: stamp, updatedAt: stamp,
         });

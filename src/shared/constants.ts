@@ -56,6 +56,56 @@ export const INDUSTRIES = [
   'Other',
 ] as const;
 
+/**
+ * How the deal is legally structured, which is separate from how it pays.
+ * Recourse differs sharply: under mudaraba a loss falls on the capital
+ * provider, where a trading partnership leaves you owning goods.
+ */
+export const DEAL_STRUCTURES = [
+  'Trading partner',
+  'Mudaraba',
+  'Partnership',
+  'Lease',
+  'Loan',
+  'Other',
+] as const;
+
+/**
+ * What actually backs the money. In informal investing this is the risk model
+ * — far more telling than a subjective low/medium/high.
+ */
+export const SECURITY_TYPES = [
+  'Cheque',
+  'Guarantor cheque',
+  'Legal agreement',
+  'Deed',
+  'Personal guarantee',
+  'Collateral',
+] as const;
+
+/** Maturity of the business, independent of how risky the deal is. */
+export const COMPANY_STAGES = ['Emerging', 'SME', 'Established'] as const;
+
+/**
+ * How often profit is actually handed over.
+ *
+ * Deliberately separate from the rate: a deal can accrue 2% a month and pay
+ * once a quarter, and conflating the two computes the wrong expectation.
+ * Months is null where payout is event-driven rather than on a calendar.
+ */
+export const PAYOUT_CYCLES = {
+  Monthly: 1,
+  'Every 2 months': 2,
+  Quarterly: 3,
+  'Every 4 months': 4,
+  'Every 6 months': 6,
+  Annually: 12,
+  'Per trade': null,
+  'At maturity': null,
+} as const;
+
+export const PAYOUT_CYCLE_NAMES = Object.keys(PAYOUT_CYCLES) as (keyof typeof PAYOUT_CYCLES)[];
+
 export const BUSINESS_STATUSES = ['Active', 'Closed', 'Defaulted', 'Exited'] as const;
 export const INVESTMENT_STATUSES = ['Active', 'Matured', 'Exited', 'Defaulted'] as const;
 export const RISK_LEVELS = ['Low', 'Medium', 'High'] as const;

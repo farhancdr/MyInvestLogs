@@ -96,7 +96,8 @@ const investment = (over: Partial<InvestmentMetrics> = {}): InvestmentMetrics =>
 const businesses: Business[] = [{
   id: 'BIZ-001', name: 'Padma Restaurant', industry: 'Food & Beverage',
   owner: '', contact: '', location: '', startDate: null, status: 'Active',
-  description: '', riskLevel: 'Medium', notes: '', createdAt: '', updatedAt: '',
+  stage: 'SME', description: '', riskLevel: 'Medium', paymentInstructions: '',
+  notes: '', createdAt: '', updatedAt: '',
 }];
 
 const thresholds: HealthThresholds = {
@@ -151,6 +152,7 @@ describe('health checks', () => {
       expected: {
         expectedMonthlyReturn: 8_333, expectedAnnualPct: 20,
         expectedProfit: 100_000, expectedTotalReturn: 600_000, expectedROI: 20,
+        expectedAnnualProfit: 100_000, expectedPerPayout: 8_333, payoutsPerYear: 12,
       },
       annualized: { rate: 9, method: 'XIRR' },
     })])).toContain('UNDERPERFORMING');
@@ -161,6 +163,7 @@ describe('health checks', () => {
       expected: {
         expectedMonthlyReturn: 8_333, expectedAnnualPct: 20,
         expectedProfit: 100_000, expectedTotalReturn: 600_000, expectedROI: 20,
+        expectedAnnualProfit: 100_000, expectedPerPayout: 8_333, payoutsPerYear: 12,
       },
       annualized: { rate: 18, method: 'XIRR' },
     })])).not.toContain('UNDERPERFORMING');

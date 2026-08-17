@@ -54,6 +54,9 @@ function investment(extra: Partial<Investment> = {}): Investment {
     investmentTerm: 12,
     maturityDate: null,
     principalRepayment: true,
+    dealStructure: 'Trading partner',
+    payoutCycle: 'Monthly',
+    security: ['Cheque'],
     status: 'Active',
     riskLevel: 'Medium',
     agreementReference: '',
@@ -353,18 +356,60 @@ describe('return models', () => {
     expect(calcExpectedVsActual(investment({ returnModel: 'Profit Share' }), totals)).toBeNull();
   });
 
-  it('expected vs actual reports the shortfall', () => {
+  it('expected vs actual measures against what has accrued, not the full term', () => {
     const totals = calcTotals([
       txn('T1', 'Investment', 500_000, '2026-01-01'),
       txn('T2', 'Profit', 72_000, '2026-12-01'),
     ]);
-    const v = calcExpectedVsActual(investment({
-      returnModel: 'Fixed', initialInvestment: 500_000, promisedReturnPct: 20, investmentTerm: 12,
-    }), totals)!;
-    expect(v.expected).toBe(100_000);
-    expect(v.actual).toBe(72_000);
-    expect(v.variance).toBe(-28_000);
-    expect(v.performancePct).toBeCloseTo(72, 5);
+    const inv = investment({
+      returnModel: 'Fixed', initialInvestment: 500_000,
+      promisedReturnPct: 20, investmentTerm: 12, investmentDate: '2026-01-01',
+    });
+
+    // A full year in, the whole 100,000 has accrued: 72,000 is a real shortfall.
+    const full = calcExpectedVsActual(inv, totals, '2027-01-01')!;
+    expect(full.expectedAtTerm).toBe(100_000);
+    expect(full.expectedToDate).toBeCloseTo(100_000, -3);
+    expect(full.actual).toBe(72_000);
+    expect(full.performancePct).toBeCloseTo(72, 0);
+
+    // Six months in, only half has accrued — and 72,000 is ahead, not behind.
+    const half = calcExpectedVsActual(inv, totals, '2026-07-01')!;
+    expect(half.expectedToDate).toBeCloseTo(50_000, -3);
+    expect(half.variance).toBeGreaterThan(0);
+    expect(half.performancePct!).toBeGreaterThan(100);
+  });
+
+  it('expected profit covers the whole term, not one year of it', () => {
+    // 15% a year over 24 months is 30% in total, not 15%.
+    const e = calcExpectedReturn(investment({
+      returnModel: 'Fixed', initialInvestment: 800_000,
+      promisedReturnPct: 15, investmentTerm: 24,
+    }))!;
+    expect(e.expectedAnnualProfit).toBe(120_000);
+    expect(e.expectedProfit).toBe(240_000);
+    expect(e.expectedROI).toBeCloseTo(30, 5);
+  });
+
+  it('the payout cycle is independent of the rate', () => {
+    // 2% a month accrues 24% a year, handed over quarterly: 6% per payout.
+    const e = calcExpectedReturn(investment({
+      returnModel: 'Monthly', initialInvestment: 500_000,
+      monthlyReturnPct: 2, investmentTerm: 12, payoutCycle: 'Quarterly',
+    }))!;
+    expect(e.expectedAnnualPct).toBe(24);
+    expect(e.expectedMonthlyReturn).toBe(10_000);
+    expect(e.payoutsPerYear).toBe(4);
+    expect(e.expectedPerPayout).toBe(30_000);
+  });
+
+  it('an event-driven payout cycle has no per-payout figure', () => {
+    const e = calcExpectedReturn(investment({
+      returnModel: 'Fixed', initialInvestment: 300_000,
+      promisedReturnPct: 25, investmentTerm: 12, payoutCycle: 'Per trade',
+    }))!;
+    expect(e.payoutsPerYear).toBeNull();
+    expect(e.expectedPerPayout).toBeNull();
   });
 
   it('remaining expected profit never goes negative', () => {

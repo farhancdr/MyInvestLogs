@@ -8,7 +8,9 @@
  *
  * Percentages are whole numbers: 20 means 20%.
  */
-import { TXN_TYPE, RETURN_MODEL, MODELS_WITHOUT_EXPECTED, ADJUSTMENT_EFFECT } from './constants.ts';
+import {
+  TXN_TYPE, RETURN_MODEL, MODELS_WITHOUT_EXPECTED, ADJUSTMENT_EFFECT, PAYOUT_CYCLES,
+} from './constants.ts';
 import type {
   Transaction, Investment, Valuation, IsoDate, Totals, ExpectedReturn,
   ExpectedVsActual, AnnualizedReturn, CashFlow, MonthlyCashFlow,
@@ -347,9 +349,23 @@ export function calcExpectedReturn(investment: Investment): ExpectedReturn | nul
     return null;
   }
 
-  // A fixed annual deal states its total directly; the others accrue monthly.
-  const expectedProfit =
-    model === RETURN_MODEL.FIXED ? (initial * annualPct) / 100 : monthly * term;
+  const expectedAnnualProfit = (initial * annualPct) / 100;
+
+  /*
+   * Profit over the agreed term, not over one year. A 24-month deal at 15% is
+   * expected to return 30%, and reporting one year's worth understated every
+   * investment whose term was not exactly twelve months.
+   */
+  const expectedProfit = term > 0 ? expectedAnnualProfit * (term / 12) : expectedAnnualProfit;
+
+  /*
+   * The payout cycle is independent of the rate: 2% a month handed over
+   * quarterly is 6% per payout. Event-driven cycles ("per trade", "at
+   * maturity") have no calendar period, so there is no per-payout figure.
+   */
+  const cycleMonths = investment.payoutCycle
+    ? PAYOUT_CYCLES[investment.payoutCycle] ?? null
+    : null;
 
   return {
     expectedMonthlyReturn: monthly,
@@ -357,6 +373,9 @@ export function calcExpectedReturn(investment: Investment): ExpectedReturn | nul
     expectedProfit,
     expectedTotalReturn: initial + expectedProfit,
     expectedROI: initial ? (expectedProfit / initial) * 100 : null,
+    expectedAnnualProfit,
+    expectedPerPayout: cycleMonths ? expectedAnnualProfit * (cycleMonths / 12) : null,
+    payoutsPerYear: cycleMonths ? 12 / cycleMonths : null,
   };
 }
 
@@ -367,23 +386,36 @@ export function calcRemainingExpectedProfit(
 ): number | null {
   const expected = calcExpectedReturn(investment);
   if (!expected) return null;
+  // Against the full term: this answers "what is still owed", not "am I behind".
   return Math.max(0, expected.expectedProfit - (profitReceived || 0));
 }
 
 export function calcExpectedVsActual(
   investment: Investment,
   totals: Totals,
+  asOf?: IsoDate,
 ): ExpectedVsActual | null {
   const expected = calcExpectedReturn(investment);
   if (!expected) return null;
 
+  const term = Number(investment.investmentTerm) || 0;
+  const elapsedRaw = monthsBetween(investment.investmentDate, asOf ?? investment.investmentDate) ?? 0;
+  const monthsElapsed = Math.max(0, term > 0 ? Math.min(elapsedRaw, term) : elapsedRaw);
+
+  /*
+   * Compared against what has accrued so far, not the full term. A six-month
+   * old investment on a two-year deal has earned a fraction of the total, and
+   * measuring it against the total reports every young holding as failing.
+   */
+  const expectedToDate = expected.expectedAnnualProfit * (monthsElapsed / 12);
+
   return {
-    expected: expected.expectedProfit,
+    expectedToDate,
+    expectedAtTerm: expected.expectedProfit,
     actual: totals.realizedProfit,
-    variance: totals.realizedProfit - expected.expectedProfit,
-    performancePct: expected.expectedProfit
-      ? (totals.realizedProfit / expected.expectedProfit) * 100
-      : null,
+    variance: totals.realizedProfit - expectedToDate,
+    performancePct: expectedToDate ? (totals.realizedProfit / expectedToDate) * 100 : null,
+    monthsElapsed,
   };
 }
 

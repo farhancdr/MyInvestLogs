@@ -1,6 +1,7 @@
 import type {
   TXN_TYPE, RETURN_MODEL, ADJUSTMENT_EFFECT, INDUSTRIES,
   BUSINESS_STATUSES, INVESTMENT_STATUSES, RISK_LEVELS, PAYMENT_METHODS,
+  DEAL_STRUCTURES, SECURITY_TYPES, COMPANY_STAGES, PAYOUT_CYCLES,
 } from './constants.ts';
 
 export type TxnType = (typeof TXN_TYPE)[keyof typeof TXN_TYPE];
@@ -11,6 +12,10 @@ export type InvestmentStatus = (typeof INVESTMENT_STATUSES)[number];
 export type RiskLevel = (typeof RISK_LEVELS)[number];
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 export type Industry = (typeof INDUSTRIES)[number];
+export type DealStructure = (typeof DEAL_STRUCTURES)[number];
+export type SecurityType = (typeof SECURITY_TYPES)[number];
+export type CompanyStage = (typeof COMPANY_STAGES)[number];
+export type PayoutCycle = keyof typeof PAYOUT_CYCLES;
 
 /** ISO `yyyy-MM-dd`. Dates are stored and compared as strings. */
 export type IsoDate = string;
@@ -24,8 +29,11 @@ export interface Business {
   location: string;
   startDate: IsoDate | null;
   status: BusinessStatus;
+  stage: CompanyStage | '';
   description: string;
   riskLevel: RiskLevel;
+  /** Where to send money: account name, number, routing, branch. */
+  paymentInstructions: string;
   notes: string;
   createdAt: string;
   updatedAt: string;
@@ -45,6 +53,11 @@ export interface Investment {
   investmentTerm: number | null;
   maturityDate: IsoDate | null;
   principalRepayment: boolean;
+  /** How the deal is structured, and how often it pays. */
+  dealStructure: DealStructure | '';
+  payoutCycle: PayoutCycle | '';
+  /** What backs the money. Several usually apply at once. */
+  security: SecurityType[];
   status: InvestmentStatus;
   riskLevel: RiskLevel;
   agreementReference: string;
@@ -107,16 +120,25 @@ export interface Totals {
 export interface ExpectedReturn {
   expectedMonthlyReturn: number;
   expectedAnnualPct: number;
+  /** Profit over the whole agreed term, not one year of it. */
   expectedProfit: number;
   expectedTotalReturn: number;
   expectedROI: number | null;
+  /** One year's profit, and one payout's worth. */
+  expectedAnnualProfit: number;
+  expectedPerPayout: number | null;
+  payoutsPerYear: number | null;
 }
 
 export interface ExpectedVsActual {
-  expected: number;
+  /** Accrued so far — the only fair comparison for a live investment. */
+  expectedToDate: number;
+  /** Over the full term, for context. */
+  expectedAtTerm: number;
   actual: number;
   variance: number;
   performancePct: number | null;
+  monthsElapsed: number;
 }
 
 export interface AnnualizedReturn {

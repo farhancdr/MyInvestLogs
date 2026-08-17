@@ -93,6 +93,11 @@ investments.post('/', async (c) => {
         investmentTerm: term,
         maturityDate: term ? addMonths(investmentDate, term) : null,
         principalRepayment: body.principalRepayment !== false,
+        dealStructure: (body.dealStructure ?? '') as Investment['dealStructure'],
+        payoutCycle: (body.payoutCycle ?? '') as Investment['payoutCycle'],
+        security: Array.isArray(body.security)
+          ? (body.security as Investment['security'])
+          : [],
         status: (body.status as Investment['status']) ?? 'Active',
         // Falls back to the business level, which is only a default.
         riskLevel: (body.riskLevel as Investment['riskLevel']) ?? business!.riskLevel,
@@ -143,6 +148,7 @@ investments.patch('/:id', async (c) => {
       const editable = [
         'name', 'returnModel', 'promisedReturnPct', 'monthlyReturnPct',
         'expectedMonthlyReturn', 'investmentTerm', 'principalRepayment',
+        'dealStructure', 'payoutCycle', 'security',
         'status', 'riskLevel', 'agreementReference', 'notes',
       ] as const;
 

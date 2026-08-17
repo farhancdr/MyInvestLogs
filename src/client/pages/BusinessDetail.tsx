@@ -67,12 +67,21 @@ export function BusinessDetail({ id, onAddInvestment }: {
           <Fact label="Contact" value={b.contact} />
           <Fact label="Location" value={b.location} />
           <Fact label="Industry" value={b.industry} />
+          <Fact label="Stage" value={b.stage} />
           <Fact label="Business started" value={b.startDate} />
           <Fact label="First invested" value={data.investmentStartDate} />
         </div>
         {b.description && <p className="mt-4 text-sm">{b.description}</p>}
         {b.notes && <p className="mt-1.5 text-sm text-muted-foreground">{b.notes}</p>}
       </Panel>
+
+      {b.paymentInstructions && (
+        <Panel title="Where to send money">
+          <pre className="overflow-x-auto whitespace-pre-wrap font-sans text-sm">
+            {b.paymentInstructions}
+          </pre>
+        </Panel>
+      )}
 
       <Panel title="Investments">
         <InvestmentTable rows={data.investments} />

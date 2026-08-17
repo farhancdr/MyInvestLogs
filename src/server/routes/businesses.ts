@@ -75,7 +75,9 @@ businesses.post('/', async (c) => {
         location: String(body.location ?? ''),
         startDate: toIsoDate(body.startDate),
         status: body.status as Business['status'],
+        stage: (body.stage ?? '') as Business['stage'],
         description: String(body.description ?? ''),
+        paymentInstructions: String(body.paymentInstructions ?? ''),
         riskLevel: (body.riskLevel as Business['riskLevel']) ?? 'Medium',
         notes: String(body.notes ?? ''),
         createdAt: timestamp,
@@ -99,8 +101,8 @@ businesses.patch('/:id', async (c) => {
       if (!existing) throw new ValidationError('Business not found.', undefined, 'NOT_FOUND');
 
       const editable = [
-        'name', 'industry', 'owner', 'contact', 'location',
-        'startDate', 'status', 'description', 'riskLevel', 'notes',
+        'name', 'industry', 'owner', 'contact', 'location', 'startDate',
+        'status', 'stage', 'description', 'riskLevel', 'paymentInstructions', 'notes',
       ] as const;
 
       const merged: Business = { ...existing };

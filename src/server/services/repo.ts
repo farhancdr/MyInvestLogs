@@ -12,8 +12,8 @@ import type {
 type BusinessRow = {
   id: string; name: string; industry: string; owner: string;
   contact: string; location: string; start_date: string | null; status: string;
-  description: string; risk_level: string; notes: string;
-  created_at: string; updated_at: string;
+  stage: string; description: string; risk_level: string; notes: string;
+  payment_instructions: string; created_at: string; updated_at: string;
 };
 
 type InvestmentRow = {
@@ -21,7 +21,8 @@ type InvestmentRow = {
   initial_investment: number; currency: string; return_model: string;
   promised_return_pct: number | null; monthly_return_pct: number | null;
   expected_monthly_return: number | null; investment_term: number | null;
-  maturity_date: string | null; principal_repayment: number; status: string;
+  maturity_date: string | null; principal_repayment: number;
+  deal_structure: string; payout_cycle: string; security: string; status: string;
   risk_level: string; agreement_reference: string; notes: string;
   created_at: string; updated_at: string;
 };
@@ -49,7 +50,9 @@ const toBusiness = (r: BusinessRow): Business => ({
   location: r.location,
   startDate: r.start_date,
   status: r.status as Business['status'],
+  stage: r.stage as Business['stage'],
   description: r.description,
+  paymentInstructions: r.payment_instructions,
   riskLevel: r.risk_level as Business['riskLevel'],
   notes: r.notes,
   createdAt: r.created_at,
@@ -70,6 +73,10 @@ const toInvestment = (r: InvestmentRow): Investment => ({
   investmentTerm: r.investment_term,
   maturityDate: r.maturity_date,
   principalRepayment: !!r.principal_repayment,
+  dealStructure: r.deal_structure as Investment['dealStructure'],
+  payoutCycle: r.payout_cycle as Investment['payoutCycle'],
+  // Stored comma-separated; several kinds of security usually apply at once.
+  security: r.security ? (r.security.split(',') as Investment['security']) : [],
   status: r.status as Investment['status'],
   riskLevel: r.risk_level as Investment['riskLevel'],
   agreementReference: r.agreement_reference,
@@ -156,10 +163,12 @@ export function insertBusiness(b: Business): void {
   db().prepare(
     `INSERT INTO businesses
       (id, name, industry, owner, contact, location, start_date,
-       status, description, risk_level, notes, created_at, updated_at)
+       status, stage, description, risk_level, payment_instructions, notes,
+       created_at, updated_at)
      VALUES
       (@id, @name, @industry, @owner, @contact, @location, @startDate,
-       @status, @description, @riskLevel, @notes, @createdAt, @updatedAt)`,
+       @status, @stage, @description, @riskLevel, @paymentInstructions, @notes,
+       @createdAt, @updatedAt)`,
   ).run(b);
 }
 
@@ -168,7 +177,8 @@ export function updateBusinessRow(b: Business): void {
     `UPDATE businesses SET
       name = @name, industry = @industry, owner = @owner,
       contact = @contact, location = @location, start_date = @startDate, status = @status,
-      description = @description, risk_level = @riskLevel, notes = @notes,
+      stage = @stage, description = @description, risk_level = @riskLevel,
+      payment_instructions = @paymentInstructions, notes = @notes,
       updated_at = @updatedAt
      WHERE id = @id`,
   ).run(b);
@@ -179,14 +189,14 @@ export function insertInvestment(i: Investment): void {
     `INSERT INTO investments
       (id, business_id, name, investment_date, initial_investment, currency, return_model,
        promised_return_pct, monthly_return_pct, expected_monthly_return, investment_term,
-       maturity_date, principal_repayment, status, risk_level, agreement_reference, notes,
-       created_at, updated_at)
+       maturity_date, principal_repayment, deal_structure, payout_cycle, security,
+       status, risk_level, agreement_reference, notes, created_at, updated_at)
      VALUES
       (@id, @businessId, @name, @investmentDate, @initialInvestment, @currency, @returnModel,
        @promisedReturnPct, @monthlyReturnPct, @expectedMonthlyReturn, @investmentTerm,
-       @maturityDate, @principalRepayment, @status, @riskLevel, @agreementReference, @notes,
-       @createdAt, @updatedAt)`,
-  ).run({ ...i, principalRepayment: i.principalRepayment ? 1 : 0 });
+       @maturityDate, @principalRepayment, @dealStructure, @payoutCycle, @security,
+       @status, @riskLevel, @agreementReference, @notes, @createdAt, @updatedAt)`,
+  ).run(toRow(i));
 }
 
 export function updateInvestmentRow(i: Investment): void {
@@ -195,11 +205,20 @@ export function updateInvestmentRow(i: Investment): void {
       name = @name, return_model = @returnModel, promised_return_pct = @promisedReturnPct,
       monthly_return_pct = @monthlyReturnPct, expected_monthly_return = @expectedMonthlyReturn,
       investment_term = @investmentTerm, maturity_date = @maturityDate,
-      principal_repayment = @principalRepayment, status = @status, risk_level = @riskLevel,
+      principal_repayment = @principalRepayment, deal_structure = @dealStructure,
+      payout_cycle = @payoutCycle, security = @security,
+      status = @status, risk_level = @riskLevel,
       agreement_reference = @agreementReference, notes = @notes, updated_at = @updatedAt
      WHERE id = @id`,
-  ).run({ ...i, principalRepayment: i.principalRepayment ? 1 : 0 });
+  ).run(toRow(i));
 }
+
+/** Booleans and the security list flatten to storable scalars. */
+const toRow = (i: Investment) => ({
+  ...i,
+  principalRepayment: i.principalRepayment ? 1 : 0,
+  security: i.security.join(','),
+});
 
 /** The only write path for transactions. There is deliberately no update. */
 export function insertTransaction(t: Transaction): void {
