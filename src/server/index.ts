@@ -2,7 +2,7 @@
  * Local API server.
  *
  * Runs on your machine only — no auth layer, because there is no network
- * surface beyond localhost and no second user (PRD §3, §37).
+ * surface beyond localhost and no second user.
  */
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';

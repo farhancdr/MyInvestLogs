@@ -1,5 +1,5 @@
 /**
- * Display formatting (PRD §9): amounts 0dp, percentages 1dp, full precision
+ * Display formatting: amounts 0dp, percentages 1dp, full precision
  * kept everywhere upstream. Null renders as an em dash, never as zero.
  */
 

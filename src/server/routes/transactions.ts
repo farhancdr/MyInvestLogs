@@ -65,7 +65,7 @@ transactions.post('/', async (c) => {
  * Reverses a transaction entered in error by writing a full offsetting
  * Adjustment. The original row is never removed — the history is a record of
  * what was believed at each point in time, which is what makes it auditable
- * at all (PRD §22). The database enforces this with a trigger.
+ * at all. The database enforces this with a trigger.
  */
 transactions.post('/:id/void', async (c) => {
   const id = c.req.param('id');

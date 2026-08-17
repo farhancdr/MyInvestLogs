@@ -1,5 +1,5 @@
 /**
- * Input validation (PRD §21).
+ * Input validation.
  *
  * Hard rules reject. Soft rules warn but permit: unusual private arrangements
  * are exactly what this tracker exists to record, and a validator that refuses
@@ -84,7 +84,7 @@ export function validateInvestment(data: Record<string, unknown>, businessExists
 }
 
 /**
- * Enforces the per-model field matrix (PRD §8). A stale value left in a field
+ * Enforces the per-model field matrix. A stale value left in a field
  * the model does not use is a common source of wrong expected-return figures.
  */
 function validateModelFields(data: Record<string, unknown>): void {
@@ -106,14 +106,14 @@ function validateModelFields(data: Record<string, unknown>): void {
     if (expectedMonthly === null) fail('Custom investments require an expected monthly return.', 'expectedMonthlyReturn');
     if (term === null) fail('Investment term is required.', 'investmentTerm');
   } else {
-    // Profit share and revenue share have no computable expectation (PRD §8).
+    // Profit share and revenue share have no computable expectation.
     if (promised !== null) fail('Promised return % must be blank for this return model.', 'promisedReturnPct');
     if (monthly !== null) fail('Monthly return % must be blank for this return model.', 'monthlyReturnPct');
     if (expectedMonthly !== null) fail('Expected monthly return must be blank for this return model.', 'expectedMonthlyReturn');
   }
 }
 
-/** Soft bounds — returned as warnings, never as rejections (PRD §21). */
+/** Soft bounds — returned as warnings, never as rejections. */
 export function returnWarnings(investment: Investment): string[] {
   const warnings: string[] = [];
   const maxAnnual = Number(getSetting('max_annual_return_pct', '200'));

@@ -1,4 +1,4 @@
-/** Domain enumerations and defaults (PRD §7, §8). */
+/** Domain enumerations and defaults. */
 
 export const TXN_TYPE = {
   INVESTMENT: 'Investment',
@@ -21,7 +21,7 @@ export const RETURN_MODEL = {
 
 export const RETURN_MODELS = Object.values(RETURN_MODEL);
 
-/** Models with no computable expected return (PRD §8). */
+/** Models with no computable expected return. */
 export const MODELS_WITHOUT_EXPECTED: readonly string[] = [
   RETURN_MODEL.PROFIT_SHARE,
   RETURN_MODEL.REVENUE_SHARE,
@@ -55,7 +55,7 @@ export const ID_PAD = {
   note: 3,
 } as const;
 
-/** Editable in Settings; defaults documented in PRD §7.8. */
+/** Editable in Settings; defaults documented below. */
 export const SETTING_DEFAULTS = {
   currency: 'BDT',
   timezone: 'Asia/Dhaka',

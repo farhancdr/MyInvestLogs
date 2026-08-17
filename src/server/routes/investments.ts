@@ -86,7 +86,7 @@ investments.post('/', async (c) => {
         maturityDate: term ? addMonths(investmentDate, term) : null,
         principalRepayment: body.principalRepayment !== false,
         status: (body.status as Investment['status']) ?? 'Active',
-        // Falls back to the business level, which is only a default (PRD §7.2).
+        // Falls back to the business level, which is only a default.
         riskLevel: (body.riskLevel as Investment['riskLevel']) ?? business!.riskLevel,
         agreementReference: String(body.agreementReference ?? ''),
         notes: String(body.notes ?? ''),
@@ -97,7 +97,7 @@ investments.post('/', async (c) => {
       repo.insertInvestment(investment);
 
       // The opening capital movement. Every movement of money is a
-      // transaction — the initial investment is not an exception (PRD §34).
+      // transaction — the initial investment is not an exception.
       const opening: Transaction = {
         id: nextId('transaction'),
         investmentId: investment.id,

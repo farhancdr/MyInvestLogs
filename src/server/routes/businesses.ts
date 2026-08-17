@@ -44,7 +44,7 @@ businesses.get('/:id', (c) =>
         investmentMetrics(i, transactions.filter((t) => t.investmentId === i.id)),
       ),
       transactions,
-      // Derived on read; deliberately not a column (PRD §7.2).
+      // Derived on read; deliberately not a column.
       investmentStartDate: own.reduce<string | null>(
         (earliest, i) => (!earliest || i.investmentDate < earliest ? i.investmentDate : earliest),
         null,

@@ -1,5 +1,5 @@
 /**
- * Sequential, readable IDs (PRD §36).
+ * Sequential, readable IDs.
  *
  * Must be called inside a transaction so two concurrent writes cannot take the
  * same number. Counters are never rewound: reusing an ID would make the audit

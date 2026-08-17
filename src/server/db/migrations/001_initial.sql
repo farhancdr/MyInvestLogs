@@ -1,4 +1,4 @@
--- Initial schema (PRD §7). Sheets become tables almost one-to-one, per §33.
+-- Initial schema. Sheets became tables almost one-to-one.
 
 CREATE TABLE businesses (
   id             TEXT PRIMARY KEY,
@@ -40,7 +40,7 @@ CREATE TABLE investments (
 );
 
 -- Expected Total Return and the business's first-investment date are derived
--- on read and deliberately absent as columns (PRD §7.2, §7.3).
+-- on read and deliberately absent as columns.
 
 CREATE TABLE transactions (
   id                TEXT PRIMARY KEY,
@@ -49,7 +49,7 @@ CREATE TABLE transactions (
   date              TEXT NOT NULL,
   type              TEXT NOT NULL CHECK (type IN
                       ('Investment','Profit','Principal Return','Fee','Loss','Adjustment')),
-  -- Always positive; direction is derived from type (PRD §7.4).
+  -- Always positive; direction is derived from type.
   amount            REAL NOT NULL CHECK (amount > 0),
   payment_method    TEXT NOT NULL DEFAULT '',
   reference         TEXT NOT NULL DEFAULT '',
@@ -69,7 +69,7 @@ CREATE INDEX idx_transactions_business ON transactions(business_id);
 CREATE INDEX idx_transactions_date ON transactions(date);
 CREATE INDEX idx_investments_business ON investments(business_id);
 
--- Append-only, enforced by the database rather than by convention (PRD §22).
+-- Append-only, enforced by the database rather than by convention.
 -- A correction is a new Adjustment row; the original is never altered.
 CREATE TRIGGER transactions_no_update BEFORE UPDATE ON transactions
 BEGIN
@@ -125,14 +125,14 @@ CREATE TABLE settings (
   description TEXT NOT NULL DEFAULT ''
 );
 
--- Readable sequential IDs (PRD §36). Allocated inside the write transaction,
+-- Readable sequential IDs. Allocated inside the write transaction,
 -- so concurrent writes cannot collide. Counters are never rewound.
 CREATE TABLE counters (
   name  TEXT PRIMARY KEY,
   value INTEGER NOT NULL DEFAULT 0
 );
 
--- Ships from day one: a log added later has no history in it (PRD §22).
+-- Ships from day one: a log added later has no history in it.
 CREATE TABLE audit_log (
   id        INTEGER PRIMARY KEY AUTOINCREMENT,
   timestamp TEXT NOT NULL,

@@ -10,7 +10,7 @@ test('an investment detail page separates principal from profit', async ({ page 
   await expect(page.getByRole('heading', { name: 'Bengal — machinery expansion' })).toBeVisible();
 
   // 800,000 deployed, 200,000 principal back, 90,000 profit — total received is
-  // 290,000 but profit is only 90,000, which is the distinction §28 exists for.
+  // 290,000 but profit is only 90,000, which is the distinction that matters.
   await expect(summary(page, 'Initial investment')).toHaveText('৳800,000');
   await expect(summary(page, 'Principal returned')).toHaveText('৳200,000');
   await expect(summary(page, 'Profit received')).toHaveText('৳90,000');

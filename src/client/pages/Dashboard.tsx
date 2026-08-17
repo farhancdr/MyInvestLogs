@@ -70,7 +70,7 @@ export function Dashboard({ onAddBusiness, onAddInvestment }: {
       />
 
       {/* Five tiles in Phase 1. Annualized ROI is the sixth and arrives with
-          the XIRR work in Phase 2 (PRD §11, §30). */}
+          the XIRR work in Phase 2. */}
       <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <Kpi label="Total Invested" value={money(k.invested)} />
         <Kpi label="Total Received" value={money(k.totalReceived)} />

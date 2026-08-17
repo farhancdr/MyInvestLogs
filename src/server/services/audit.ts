@@ -1,5 +1,5 @@
 /**
- * Audit logging (PRD §22).
+ * Audit logging.
  *
  * Written inside the same transaction as the change itself, so a logged
  * change and the change cannot diverge.

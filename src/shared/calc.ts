@@ -1,5 +1,5 @@
 /**
- * Pure calculation layer (PRD §26).
+ * Pure calculation layer.
  *
  * Reads nothing and writes nothing: every function takes plain data and
  * returns numbers. All financial rules live here and nowhere else, which is
@@ -51,7 +51,7 @@ export function addMonths(iso: IsoDate, months: number): IsoDate {
   return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
-/* ---------- transaction semantics (PRD §7.4) ---------- */
+/* ---------- transaction semantics ---------- */
 
 type Bucket = 'invested' | 'profitReceived' | 'principalReturned' | 'feesPaid' | 'writtenOff';
 
@@ -139,7 +139,7 @@ export function normalizeTransactions(transactions: Transaction[]): NormalizedEn
   return out;
 }
 
-/* ---------- core totals (PRD §9) ---------- */
+/* ---------- core totals ---------- */
 
 export function calcTotals(transactions: Transaction[]): Totals {
   let invested = 0;
@@ -179,13 +179,13 @@ export function calcTotals(transactions: Transaction[]): Totals {
   };
 }
 
-/** ROI on cumulative gross capital deployed (PRD §9). May be negative. */
+/** ROI on cumulative gross capital deployed. May be negative. */
 export function calcRealizedROI(realizedProfit: number, totalInvested: number): number | null {
   if (!totalInvested) return null;
   return (realizedProfit / totalInvested) * 100;
 }
 
-/* ---------- annualized return (PRD §10) ---------- */
+/* ---------- annualized return ---------- */
 
 /** Dated cash flows for IRR. Write-offs are excluded: no cash moved. */
 export function buildCashFlows(transactions: Transaction[]): CashFlow[] {
@@ -210,7 +210,7 @@ function npvDerivative(flows: CashFlow[], rate: number, base: IsoDate): number {
 }
 
 /**
- * XIRR by Newton-Raphson with a bisection fallback (PRD §10).
+ * XIRR by Newton-Raphson with a bisection fallback.
  *
  * Returns null when the conditions are not met or the solver fails. Showing a
  * dash always beats showing an unconverged number.
@@ -263,7 +263,7 @@ function bisectXIRR(flows: CashFlow[], base: IsoDate): number | null {
   return (lo + hi) / 2;
 }
 
-/** Compound annual growth rate, used when XIRR does not apply (PRD §10). */
+/** Compound annual growth rate, used when XIRR does not apply. */
 export function calcCAGR(
   totalInvested: number,
   totalReceived: number,
@@ -276,7 +276,7 @@ export function calcCAGR(
 }
 
 /**
- * XIRR, then CAGR, then nothing (PRD §10). Rate is a percentage.
+ * XIRR, then CAGR, then nothing. Rate is a percentage.
  *
  * Open positions get a terminal cash flow equal to the capital still
  * outstanding, valued at par on the as-of date. Without it, an investment that
@@ -312,7 +312,7 @@ export function calcAnnualizedReturn(
   return cagr === null ? null : { rate: cagr * 100, method: 'CAGR' };
 }
 
-/* ---------- expected return (PRD §8) ---------- */
+/* ---------- expected return ---------- */
 
 export function modelHasExpectedReturn(model: string): boolean {
   return !MODELS_WITHOUT_EXPECTED.includes(model);
@@ -320,7 +320,7 @@ export function modelHasExpectedReturn(model: string): boolean {
 
 /**
  * Expected figures derived from the return model. Null for profit share and
- * revenue share, which have no computable expectation (PRD §8).
+ * revenue share, which have no computable expectation.
  */
 export function calcExpectedReturn(investment: Investment): ExpectedReturn | null {
   const model = investment.returnModel;
@@ -360,7 +360,7 @@ export function calcExpectedReturn(investment: Investment): ExpectedReturn | nul
   };
 }
 
-/** Expected profit still to come (PRD §31 metric 7). */
+/** Expected profit still to come. */
 export function calcRemainingExpectedProfit(
   investment: Investment,
   profitReceived: number,
@@ -389,7 +389,7 @@ export function calcExpectedVsActual(
 
 /* ---------- portfolio views ---------- */
 
-/** Month-by-month inflow and outflow (PRD §12 Chart 2). */
+/** Month-by-month inflow and outflow. */
 export function calcMonthlyCashFlow(transactions: Transaction[]): MonthlyCashFlow[] {
   const months = new Map<string, MonthlyCashFlow>();
 
@@ -413,7 +413,7 @@ export function calcMonthlyCashFlow(transactions: Transaction[]): MonthlyCashFlo
   return [...months.values()].sort((a, b) => (a.month < b.month ? -1 : 1));
 }
 
-/** Highest single-business share of outstanding capital (PRD §19). */
+/** Highest single-business share of outstanding capital. */
 export function calcConcentration(
   outstandingByBusiness: Record<string, number>,
 ): { businessId: string; share: number } | null {
@@ -429,7 +429,7 @@ export function calcConcentration(
   return top;
 }
 
-/** Unrealized P&L against the latest valuation (PRD §9). Never enters ROI. */
+/** Unrealized P&L against the latest valuation. Never enters ROI. */
 export function calcUnrealizedPnL(
   valuations: Valuation[],
   capitalOutstanding: number,

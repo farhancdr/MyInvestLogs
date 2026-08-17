@@ -1,5 +1,5 @@
 {
-  "name": "personal-invest-tracker",
+  "name": "myinvestlogs",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -61,5 +61,6 @@
     "esbuild@0.28.2": true,
     "esbuild@0.21.5": true,
     "esbuild@0.25.12": true
-  }
+  },
+  "description": "Self-hosted tracker for investments in small businesses and private ventures"
 }

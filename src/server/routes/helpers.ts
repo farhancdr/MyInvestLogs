@@ -1,5 +1,5 @@
 /**
- * Response envelope and error translation (PRD §25).
+ * Response envelope and error translation.
  *
  * A validation failure is an expected outcome, not a crash, so it travels back
  * as data rather than as an exception.
@@ -33,8 +33,8 @@ export function handle<T>(c: Context, fn: () => T) {
       return fail(c, { code: e.code, message: e.message, field: e.field });
     }
     const message = e instanceof Error ? e.message : String(e);
-    // SQLite constraint failures are the database enforcing a PRD rule; the
-    // message is more useful to the user than a generic 500.
+    // SQLite constraint failures are the database enforcing an accounting rule;
+    // the message is more useful to the user than a generic 500.
     const code: ApiError['code'] = message.includes('SQLITE_CONSTRAINT') ? 'CONFLICT' : 'INTERNAL';
     return fail(c, { code, message });
   }

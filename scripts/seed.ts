@@ -125,7 +125,7 @@ const PLAN: BusinessPlan[] = [
         name: 'Jamuna — stock financing', model: RETURN_MODEL.MONTHLY, amount: 400_000,
         date: '2025-05-05', term: 12, monthlyPct: 3, risk: 'High', status: 'Defaulted',
         // Pays for four months, then stops. Capital is written off with an
-        // explicit Loss: status alone changes no number (PRD §28).
+        // explicit Loss: status alone changes no number.
         profits: { every: 1, count: 4, amount: 12_000 },
         loss: { offset: 13, amount: 400_000, note: 'Business ceased trading; capital unrecoverable' },
       },
@@ -231,7 +231,7 @@ function seed(): void {
     }
 
     // One correction, so the append-only adjustment path is visible in the
-    // data rather than only in the code (PRD §22).
+    // data rather than only in the code.
     if (firstProfit) {
       const target = repo.findTransaction(firstProfit.id)!;
       repo.insertTransaction({

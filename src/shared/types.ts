@@ -11,7 +11,7 @@ export type InvestmentStatus = (typeof INVESTMENT_STATUSES)[number];
 export type RiskLevel = (typeof RISK_LEVELS)[number];
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
-/** ISO `yyyy-MM-dd`. Dates are stored and compared as strings (PRD §35). */
+/** ISO `yyyy-MM-dd`. Dates are stored and compared as strings. */
 export type IsoDate = string;
 
 export interface Business {
@@ -59,7 +59,7 @@ export interface Transaction {
   businessId: string;
   date: IsoDate;
   type: TxnType;
-  /** Always positive; direction is derived from `type` (PRD §7.4). */
+  /** Always positive; direction is derived from `type`. */
   amount: number;
   paymentMethod: string;
   reference: string;
@@ -194,7 +194,7 @@ export interface DashboardData {
   generatedAt: string;
 }
 
-/* ---------- API envelope (PRD §25) ---------- */
+/* ---------- API envelope ---------- */
 
 export type ApiErrorCode = 'VALIDATION' | 'NOT_FOUND' | 'CONFLICT' | 'INTERNAL';
 

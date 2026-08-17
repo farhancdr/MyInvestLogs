@@ -2,7 +2,7 @@
  * Assembles the pure calculation layer over database rows.
  *
  * Nothing here is stored. Every metric is recomputed from the transaction
- * history on read (PRD §26), so there is exactly one path to any number and it
+ * history on read, so there is exactly one path to any number and it
  * starts at the transactions. SQLite makes this cheap enough that caching is
  * unnecessary at this scale.
  */
@@ -45,7 +45,7 @@ export function investmentMetrics(
     investmentDate: investment.investmentDate,
     initialInvestment: investment.initialInvestment,
     // null for profit share and revenue share, rendered as N/A rather than
-    // zero, which would look like infinitely beating expectations (PRD §8).
+    // zero, which would look like infinitely beating expectations.
     expected: calcExpectedReturn(investment),
     expectedVsActual: calcExpectedVsActual(investment, totals),
     remainingExpectedProfit: calcRemainingExpectedProfit(investment, totals.profitReceived),
@@ -79,7 +79,7 @@ export function portfolioMetrics(
   return {
     ...totals,
     activeInvestments,
-    // Excludes profit-share and revenue-share investments entirely (PRD §8).
+    // Excludes profit-share and revenue-share investments entirely.
     remainingExpectedProfit: anyExpected ? remainingExpectedProfit : null,
   };
 }
@@ -103,7 +103,7 @@ export function businessSummary(
   };
 }
 
-/** Cumulative deployed vs returned capital, by month (PRD §12 Chart 1). */
+/** Cumulative deployed vs returned capital, by month. */
 export function portfolioOverTime(transactions: Transaction[]): PortfolioPoint[] {
   let invested = 0;
   let returned = 0;
@@ -121,7 +121,7 @@ export function portfolioOverTime(transactions: Transaction[]): PortfolioPoint[]
 }
 
 /**
- * Allocation by industry, weighted by capital outstanding (PRD §12 Chart 3).
+ * Allocation by industry, weighted by capital outstanding.
  * Outstanding rather than gross, because the question is where money is now —
  * capital already returned is no longer allocated anywhere.
  */

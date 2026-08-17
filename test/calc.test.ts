@@ -1,9 +1,9 @@
 /**
  * Tests for the pure calculation layer.
  *
- * These cover the financial rules the PRD is most specific about: the
- * capital/principal/profit distinction (§28), write-offs and fees (§9),
- * adjustments (§22), the return-model matrix (§8), and annualized return (§10).
+ * These cover the rules that matter most: the
+ * capital/principal/profit distinction, write-offs and fees,
+ * adjustments, the return-model matrix, and annualized return.
  */
 import { describe, it, expect } from 'vitest';
 import {
@@ -64,7 +64,7 @@ function investment(extra: Partial<Investment> = {}): Investment {
   };
 }
 
-describe('§29 worked example', () => {
+describe('worked example: a full investment cycle', () => {
   it('twelve monthly profits plus principal return', () => {
     const txns = [txn('TXN-00001', 'Investment', 500_000, '2026-01-10')];
     ['02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'].forEach((m, i) =>
@@ -84,7 +84,7 @@ describe('§29 worked example', () => {
   });
 });
 
-describe('§28 capital vs profit', () => {
+describe('capital versus profit', () => {
   it('does not report total received as profit', () => {
     const t = calcTotals([
       txn('T1', 'Investment', 500_000, '2026-01-01'),
@@ -96,7 +96,7 @@ describe('§28 capital vs profit', () => {
     expect(t.capitalOutstanding).toBe(0);
   });
 
-  it('§17 example: outstanding subtracts principal only', () => {
+  it('outstanding subtracts principal only', () => {
     const t = calcTotals([
       txn('T1', 'Investment', 800_000, '2026-01-01'),
       txn('T2', 'Profit', 120_000, '2026-06-01'),
@@ -108,7 +108,7 @@ describe('§28 capital vs profit', () => {
   });
 });
 
-describe('§9 fees and write-offs', () => {
+describe('fees and write-offs', () => {
   it('fees reduce profit but never capital', () => {
     const t = calcTotals([
       txn('T1', 'Investment', 100_000, '2026-01-01'),
@@ -146,7 +146,7 @@ describe('§9 fees and write-offs', () => {
   });
 });
 
-describe('§22 adjustments', () => {
+describe('adjustments', () => {
   it('a decrease adjustment corrects the original bucket', () => {
     const t = calcTotals([
       txn('TXN-00042', 'Profit', 50_000, '2026-05-01'),
@@ -203,7 +203,7 @@ describe('§22 adjustments', () => {
   });
 });
 
-describe('§9 ROI', () => {
+describe('realized ROI', () => {
   it('is null when no capital has been deployed', () => {
     expect(calcRealizedROI(1_000, 0)).toBeNull();
   });
@@ -220,7 +220,7 @@ describe('§9 ROI', () => {
   });
 });
 
-describe('§10 annualized return', () => {
+describe('annualized return', () => {
   it('XIRR: 500k out, 600k back after a year is 20%', () => {
     const rate = calcXIRR([
       { date: '2026-01-01', amount: -500_000 },
@@ -311,7 +311,7 @@ describe('§10 annualized return', () => {
   });
 });
 
-describe('§8 return models', () => {
+describe('return models', () => {
   it('Model A: fixed annual return', () => {
     const e = calcExpectedReturn(investment({
       returnModel: 'Fixed', initialInvestment: 500_000, promisedReturnPct: 20, investmentTerm: 12,
@@ -376,7 +376,7 @@ describe('§8 return models', () => {
   });
 });
 
-describe('§12 portfolio views', () => {
+describe('portfolio views', () => {
   it('monthly cash flow groups by month and splits profit from principal', () => {
     const rows = calcMonthlyCashFlow([
       txn('T1', 'Investment', 500_000, '2026-01-15'),

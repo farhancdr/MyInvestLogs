@@ -23,7 +23,7 @@ export function Transactions({ onAddTransaction }: { onAddTransaction: () => voi
 
   /**
    * Voiding writes a reversing adjustment; the original row stays exactly as
-   * recorded, and the database rejects any attempt to alter it (PRD §22).
+   * recorded, and the database rejects any attempt to alter it.
    */
   const voidTransaction = async (id: string) => {
     const reason = window.prompt(

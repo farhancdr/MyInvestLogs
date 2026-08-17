@@ -1,5 +1,5 @@
 /**
- * Date handling pinned to a single timezone (PRD §35).
+ * Date handling pinned to a single timezone.
  *
  * Dates are stored as ISO `yyyy-MM-dd` strings so they sort and compare
  * lexicographically and never shift across a midnight boundary.

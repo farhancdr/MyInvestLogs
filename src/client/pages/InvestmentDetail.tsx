@@ -96,7 +96,7 @@ export function InvestmentDetail({ id, onAddTransaction }: {
         )}
       </Panel>
 
-      {/* Profit share and revenue share have no computable expectation (PRD §8). */}
+      {/* Profit share and revenue share have no computable expectation. */}
       {e && v ? (
         <Panel title="Expected vs actual">
           <div className="grid gap-x-4 sm:grid-cols-3 lg:grid-cols-5">

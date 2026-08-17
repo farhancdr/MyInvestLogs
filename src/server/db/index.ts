@@ -81,7 +81,7 @@ function seedSettings(conn: Database.Database): void {
 /**
  * Runs a unit of work in a transaction.
  *
- * This is what replaces the Apps Script lock (PRD §36): ID allocation, the row
+ * This is what replaces the Apps Script lock: ID allocation, the row
  * write, and the audit entry either all land or none do.
  */
 export function transaction<T>(fn: () => T): T {
