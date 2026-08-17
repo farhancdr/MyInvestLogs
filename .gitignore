@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.DS_Store
+
+# The database itself IS committed — it is the only copy of your records.
+# The app runs in rollback-journal mode so everything lives in that one file;
+# these sidecars should never appear, and are ignored only as a safety net.
+data/*.db-wal
+data/*.db-shm
+data/*.db-journal

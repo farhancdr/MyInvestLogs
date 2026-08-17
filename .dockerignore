@@ -1,0 +1,6 @@
+node_modules
+dist
+legacy
+data/*.db-wal
+data/*.db-shm
+.git

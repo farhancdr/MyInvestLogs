@@ -1,0 +1,14 @@
+services:
+  tracker:
+    build: .
+    container_name: invest-tracker
+    ports:
+      # Bound to loopback: this is a personal tool with no auth layer, and it
+      # should not be reachable from anything but this machine (PRD §3).
+      - '127.0.0.1:3000:3000'
+    volumes:
+      # The database lives in the repo so `git clone` restores your records.
+      - ./data:/app/data
+    environment:
+      DB_PATH: /app/data/tracker.db
+    restart: unless-stopped
