@@ -11,9 +11,9 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -27,6 +27,12 @@ jobs:
       - name: Unit tests
         run: npm test
 
+      # The end-to-end suite drives the production build: the server only
+      # serves dist/client when it exists, so without this the page is blank
+      # and every selector fails.
+      - name: Build client
+        run: npm run build
+
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
 
@@ -35,7 +41,7 @@ jobs:
 
       - name: Upload report on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: playwright-report/
