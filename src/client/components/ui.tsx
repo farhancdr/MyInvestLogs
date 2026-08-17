@@ -26,10 +26,10 @@ export function Kpi({
   label, value, note, valueTone,
 }: { label: string; value: string; note?: string; valueTone?: string }) {
   return (
-    <Card>
+    <Card data-kpi={label}>
       <CardContent className="p-4">
         <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
-        <div className={cn('mt-1.5 text-[27px] font-semibold tracking-tight', valueTone)}>
+        <div data-kpi-value className={cn('mt-1.5 text-[27px] font-semibold tracking-tight', valueTone)}>
           {value}
         </div>
         {note && <div className="mt-0.5 text-xs text-muted-foreground">{note}</div>}
@@ -54,9 +54,11 @@ export function SummaryItem({
   label, value, valueTone,
 }: { label: string; value: string; valueTone?: string }) {
   return (
-    <div className="border-b py-2.5">
+    <div className="border-b py-2.5" data-summary={label}>
       <div className="text-xs text-muted-foreground">{label}</div>
-      <div className={cn('mt-0.5 text-[17px] font-semibold tabular', valueTone)}>{value}</div>
+      <div data-summary-value className={cn('mt-0.5 text-[17px] font-semibold tabular', valueTone)}>
+        {value}
+      </div>
     </div>
   );
 }

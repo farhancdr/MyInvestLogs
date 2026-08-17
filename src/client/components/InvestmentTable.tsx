@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import { navigate } from '@/lib/router.ts';
 import { cn } from '@/lib/utils.ts';
+import { money } from '@/lib/format.ts';
 import { MoneyText, PercentText, StatusBadge, EmptyState } from '@/components/ui.tsx';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -83,10 +84,13 @@ export function InvestmentTable({ rows }: { rows: InvestmentMetrics[] }) {
             >
               <TableCell className="font-medium">{row.name}</TableCell>
               <TableCell className="text-muted-foreground">{row.businessName ?? ''}</TableCell>
-              <TableCell className="text-right tabular"><MoneyText value={row.invested} /></TableCell>
-              <TableCell className="text-right tabular"><MoneyText value={row.totalReceived} /></TableCell>
+              {/* Only profit and ROI carry direction. Capital deployed, received
+                  and outstanding are magnitudes, not gains — colouring them
+                  would make every row read as profit. */}
+              <TableCell className="text-right tabular">{money(row.invested)}</TableCell>
+              <TableCell className="text-right tabular">{money(row.totalReceived)}</TableCell>
               <TableCell className="text-right tabular"><MoneyText value={row.realizedProfit} /></TableCell>
-              <TableCell className="text-right tabular"><MoneyText value={row.capitalOutstanding} /></TableCell>
+              <TableCell className="text-right tabular">{money(row.capitalOutstanding)}</TableCell>
               <TableCell className="text-right tabular"><PercentText value={row.realizedROI} /></TableCell>
               <TableCell><StatusBadge value={row.status} /></TableCell>
             </TableRow>

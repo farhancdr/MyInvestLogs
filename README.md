@@ -1,171 +1,170 @@
+<div align="center">
+
 # Personal Investment Tracker
 
-A private tracker for investments in small businesses, private ventures and partnerships. Implements `prd.md`, Phase 1 scope (§30).
+**Track investments in small businesses, private ventures and partnerships — the ones no portfolio app supports.**
 
-React + Vite frontend with shadcn/ui, Hono API, SQLite. Runs locally in Docker. Not deployed anywhere.
+Self-hosted. Your data stays in a SQLite file on your machine.
+
+[![CI](https://github.com/farhancdr/personal-invest-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/farhancdr/personal-invest-tracker/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
+![Tests](https://img.shields.io/badge/tests-41%20unit%20%2B%2026%20e2e-success)
+
+</div>
+
+![Dashboard](docs/images/dashboard.png)
 
 ---
 
-## Run it
+## Why
+
+Stock portfolio apps assume public markets, tickers and live prices. None of that exists when you put ৳500,000 into a friend's restaurant for 2% a month, or take a 30% profit share in a trading business.
+
+So people track these in spreadsheets — and spreadsheets get one thing wrong almost every time:
+
+> You invest **৳500,000**. Over a year you receive **৳600,000** back: ৳500,000 of your own capital, plus ৳100,000 of profit.
+>
+> A spreadsheet says you made ৳600,000. **You made ৳100,000.**
+
+This app is built around that distinction. Capital, principal returned, and profit are separate things, and every number on the dashboard derives from a transaction ledger rather than a hand-maintained total.
+
+## What it does
+
+- **Portfolio dashboard** — capital deployed, received, profit, outstanding, realized ROI
+- **Five return models** — fixed annual, monthly fixed, profit share, revenue share, custom
+- **Honest handling of the awkward cases** — fees, partial payments, defaults and write-offs
+- **Expected vs actual** — where an expectation is computable; a clear N/A where it isn't
+- **Append-only ledger** — corrections are reversing adjustments, enforced by the database
+- **Audit log** — every mutation recorded from day one
+- **Light and dark** — following your system setting
+
+---
+
+## Quick start
 
 ```bash
-docker compose up --build
-```
-
-Then open **http://localhost:3000**.
-
-The database lives at `data/tracker.db` and is mounted into the container, so your records survive rebuilds.
-
-### On a new machine
-
-```bash
-git clone <your-private-repo>
+git clone https://github.com/farhancdr/personal-invest-tracker.git
 cd personal-invest-tracker
 docker compose up --build
 ```
 
-The database is committed, so cloning restores every record. Nothing else to restore.
+Open **http://localhost:3000**.
 
----
+To explore with realistic data before entering anything real:
 
-## Development
+```bash
+docker compose run --rm tracker npm run seed        # 5 businesses, 7 investments, 51 transactions
+docker compose run --rm tracker npm run seed:clear  # remove it again
+```
+
+The sample set deliberately includes a short payment, a fee, a defaulted business written off, and a corrected transaction — so you can see how the awkward cases actually render.
+
+### Development
 
 ```bash
 npm install
-npm run dev       # Vite on :5173, API on :3000
-npm test          # calculation-layer tests
+npm run dev        # Vite on :5173, API on :3000
+npm test           # 41 unit tests — the calculation layer
+npm run test:e2e   # 26 Playwright tests — the real app in a browser
 npm run typecheck
 ```
 
-`npm install` may need its native build approved:
+---
 
-```bash
-npm install-scripts approve better-sqlite3 esbuild
-```
+## Screenshots
 
-### Sample data
-
-To see how a populated dashboard looks before entering anything real:
-
-```bash
-npm run seed        # 5 businesses, 7 investments, 51 transactions
-npm run seed:clear  # remove them
-```
-
-Every seeded row carries a visible `[sample]` marker, and cleanup deletes only marked rows — real records entered alongside are never at risk. The sample set deliberately covers all five return models, a short payment, a fee, a defaulted business written off, and one corrected transaction.
-
-### Snapshots
-
-```bash
-npm run dump   # writes data/dump.sql
-```
-
-The `.db` file is what gets committed, but a binary blob has no readable history. Run this before anything risky so git holds a text copy you can diff.
-
-**One caveat on committing the database:** it conflicts unresolvably if you ever commit from two machines. One machine at a time is fine.
+<table>
+<tr>
+<td width="50%"><img src="docs/images/investment-detail.png" alt="Investment detail"><br><em>Investment detail — expected vs actual, terms, full cash-flow timeline</em></td>
+<td width="50%"><img src="docs/images/dashboard-dark.png" alt="Dark mode"><br><em>Dark mode, following the system setting</em></td>
+</tr>
+<tr>
+<td><img src="docs/images/transactions.png" alt="Transactions"><br><em>Append-only transaction ledger</em></td>
+<td><img src="docs/images/add-investment.png" alt="Add investment"><br><em>Adding an investment, with the expected return computed live</em></td>
+</tr>
+</table>
 
 ---
 
-## Layout
+## The accounting rules
+
+These are the decisions that make the numbers trustworthy. Each is enforced in code and covered by tests.
+
+**Every movement of money is a transaction.** Creating an investment writes its opening transaction automatically — initial capital is not a special case. Every total is derived from that ledger, so there is exactly one path to any figure on screen.
+
+**Transactions are append-only.** No update, no delete — enforced by a SQLite trigger, not by convention. A mistake is corrected with a reversing `Adjustment` that points at the original, which stays exactly as recorded. The history stays a record of what was believed at the time.
+
+**A defaulted investment does not write itself off.** Marking a business `Defaulted` changes no number. Capital leaves the outstanding total only when you record an explicit `Loss`, which also reduces realized profit and can push ROI negative. Without this, a dead investment inflates your portfolio forever.
+
+**Fees reduce profit, never capital.**
+
+**Profit share and revenue share show N/A, never zero.** Their returns depend on business performance and cannot be forecast. Treating unknown as zero would make every profit-share investment look like it infinitely beat expectations.
+
+**Annualized return values open positions at par.** Realized cash flows alone treat un-returned principal as a total loss, so a healthy investment that simply hasn't matured would report a catastrophic IRR. Written-off capital is excluded, so a real default still annualizes to a loss.
+
+**Realized ROI counts recycled capital twice.** Capital invested, returned, then redeployed reads as double the gross deployed. A deliberate, documented choice — which is why the tile is labelled *on total capital deployed* rather than left to be guessed at.
+
+---
+
+## Architecture
+
+```
+React 18 + Vite + shadcn/ui   →   Hono API   →   SQLite (better-sqlite3)
+```
 
 ```
 src/
   shared/        types, constants, and calc.ts — every financial rule
   server/
-    db/          SQLite connection + SQL migrations
+    db/          connection + plain SQL migrations
     services/    ids, audit, dates, validation, repo, metrics
     routes/      HTTP API
   client/
-    index.css    Tailwind theme: shadcn tokens + the validated chart palette
-    lib/         fetch wrapper, hash router, formatting, cn()
-    components/
-      ui/        shadcn components (owned source — edit freely)
-      …          charts, tables, forms, app primitives
-    pages/       dashboard, businesses, investments, transactions
+    components/ui/   shadcn components (owned source)
+    components/      charts, tables, forms
+    pages/           dashboard, businesses, investments, transactions
 
-test/            calculation-layer tests
-scripts/         seed and dump
-legacy/          the previous Google Apps Script implementation
+test/            unit tests for the calculation layer
+e2e/             Playwright specs, including screenshot capture
 ```
 
-### Where the rules live
+**Every financial rule lives in `src/shared/calc.ts` and nowhere else.** It is pure — no database, no framework, no I/O. The server feeds it rows; the client formats what comes back. If a number looks wrong, that one file and its tests are the entire search space.
 
-Every financial rule is in `src/shared/calc.ts` and nowhere else. The server feeds it rows, the client formats what comes back. If a number looks wrong, that file and its tests are the whole search space.
-
----
-
-## How the data behaves
-
-**Every movement of money is a transaction** (§34). Creating an investment automatically writes its opening `Investment` transaction — initial capital is not a special case.
-
-**Transactions are append-only**, enforced by a database trigger rather than by convention. There is no update and no delete. To correct one, use Void: it writes a reversing `Adjustment` and leaves the original row exactly as recorded.
-
-**A defaulted investment does not write itself off.** Setting status to `Defaulted` changes no number. Capital leaves the outstanding total only when you record a `Loss` transaction, which also reduces realized profit and can push ROI negative.
-
-**Fees reduce profit, never capital.**
-
-**Realized ROI counts recycled capital twice.** Capital invested, returned, then redeployed reads as double the gross deployed — the documented choice in §9, which is why the tile is labelled "on total capital deployed".
-
-**Profit-share and revenue-share investments show N/A**, never zero, wherever an expected return would be required (§8). Their actual returns are tracked normally.
-
-**Annualized return values open positions at par** (§10). Without a terminal cash flow, IRR treats un-returned capital as a total loss and reports a catastrophic figure for every healthy investment that has not yet matured.
-
----
-
-## What Phase 1 covers
-
-| PRD | Built |
-| --- | ----- |
-| §7 | Full schema; sheets became tables one-to-one, per §33 |
-| §9 | Totals, ROI, fees, write-offs, outstanding capital, net cash flow |
-| §11 | Dashboard with five KPI tiles |
-| §12 | Portfolio over time, cash flow, allocation by industry, monthly profit |
-| §13 | Sortable, searchable, filterable investment table |
-| §14 | Investment detail: summary, terms, expected vs actual, timeline |
-| §15 | Add-investment flow with live expected-return review |
-| §16 | Add-transaction flow with per-type accounting hints |
-| §17 | Business detail with rolled-up metrics and full history |
-| §21 | Hard rules reject; return-percentage bounds warn only |
-| §22 | Append-only transactions, void-by-reversal, audit log |
-| §25 | Filters, pagination, `{ ok, data | error }` envelope |
-| §26 | Pure calculation layer, computed on read |
-| §35 | ISO dates pinned to `Asia/Dhaka` |
-| §36 | SQL transactions and sequential ID allocation |
-
-### Deliberately not in Phase 1
-
-Per §30 these belong to later phases. The tables exist so no migration is needed later; nothing writes to them yet.
-
-- **Expected payments and matching** (Phase 2)
-- **Annualized ROI as the sixth KPI tile** (Phase 2) — computed and returned by the API, no screen shows it
-- **Charts 4 and 5** (Phase 2) — both need cross-investment annualized or expected-vs-actual data
-- **Alerts and concentration warnings** (Phase 2) — `calcConcentration` is built and tested, unused by the UI
-- **Valuations, notes, scenario analysis** (Phase 4) — `calcUnrealizedPnL` is built and tested, unused
-
----
-
-## Interface
-
-Built on **shadcn/ui** (new-york style, neutral base, Radix primitives). Components live in `src/client/components/ui/` as owned source — edit them directly rather than fighting a dependency. Add more with:
-
-```bash
-npx shadcn@latest add <component>
-```
-
-Theme follows the OS light/dark setting. shadcn switches on a `.dark` class, so `main.tsx` mirrors `prefers-color-scheme` onto the root element.
+Metrics are computed on read, never stored. A materialized total can go stale, and a stale financial figure is worse than a slow one: it is wrong without looking wrong.
 
 ### Charts
 
-Chart colors are **deliberately not** derived from the shadcn theme. They come from a palette validated for both surfaces: lightness band, chroma floor, colorblind separation, and normal-vision separation all pass in each mode. They live as their own `--chart-*` tokens so restyling the interface cannot disturb them.
+Chart colors are deliberately **not** derived from the UI theme. The eight categorical hues were validated against both light and dark surfaces — lightness band, chroma floor, colorblind separation and normal-vision separation all pass in each mode — and live as their own tokens so a restyle cannot quietly break them.
 
-Three light-mode slots fall below 3:1 contrast against the surface, so the allocation chart carries visible value labels and the investment table doubles as the table view.
+Cash flow is drawn as polarity (money in above the baseline, out below) rather than as two unrelated series. Allocation is a stacked bar rather than a donut, because shares compare far more easily along a common baseline.
 
-Series slots are assigned in fixed order and never cycled — a ninth industry folds into "Other" rather than inventing a hue.
+### Testing
 
-Cash flow is drawn as polarity — money in above the baseline, money out below — rather than as two unrelated categories. Allocation is a stacked bar rather than a donut, because shares are far easier to compare along a common baseline.
+The 41 unit tests encode the PRD's own worked examples, so a rule change breaks a test by name. The 26 Playwright tests drive the real app against a seeded database — including that voiding preserves the original row, that future-dated transactions are rejected, and that profit-share investments render N/A rather than a fabricated expectation.
+
+The README screenshots are generated by the same suite, so they cannot drift out of date.
+
+---
+
+## Roadmap
+
+Phase 1 is complete. Later phases are specified in [`prd.md`](prd.md).
+
+- **Phase 2** — expected payment schedules and matching, annualized ROI on the dashboard, overdue alerts, concentration warnings
+- **Phase 3** — scheduled jobs, payment reminders, monthly reports
+- **Phase 4** — valuations and unrealized P&L, document links, scenario analysis
+
+The full specification, the review that shaped it, and every resolved design decision are in [`prd.md`](prd.md) and [`prd-review.md`](prd-review.md).
 
 ---
 
 ## Security
 
-No authentication, by design. The app binds to `127.0.0.1` only and is single-user (§3). Do not expose the port beyond this machine, and keep the repository private — it contains your complete financial history.
+No authentication, by design. The app binds to `127.0.0.1` and is single-user. Do not expose the port beyond your machine.
+
+**If you fork this, keep your database out of the repository.** `data/tracker.db` holds your complete financial history.
+
+## License
+
+MIT — see [LICENSE](LICENSE).

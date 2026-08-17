@@ -17,7 +17,10 @@
     "test:watch": "vitest",
     "dump": "tsx scripts/dump.ts",
     "seed": "tsx scripts/seed.ts",
-    "seed:clear": "tsx scripts/seed.ts --clear"
+    "seed:clear": "tsx scripts/seed.ts --clear",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "screenshots": "playwright test e2e/screenshots.spec.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",
@@ -35,6 +38,7 @@
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/vite": "^4.3.3",
     "@types/better-sqlite3": "^7.6.12",
     "@types/node": "^22.10.2",

@@ -1,0 +1,25 @@
+# Playwright image so browsers and their system libraries are already present.
+FROM mcr.microsoft.com/playwright:v1.62.1-noble
+
+WORKDIR /app
+
+# This image ships a Node major with no better-sqlite3 prebuild for arm64, so
+# the native module is compiled here. build-essential is only needed at build
+# time; the app image does not carry it.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends sqlite3 build-essential python3 \
+  && rm -rf /var/lib/apt/lists/*
+
+COPY package*.json ./
+RUN npm ci
+
+COPY tsconfig.json vite.config.ts vitest.config.ts playwright.config.ts ./
+COPY src ./src
+COPY scripts ./scripts
+COPY test ./test
+COPY e2e ./e2e
+
+# The suite runs against the production build, the same artifact Docker serves.
+RUN npm run build
+
+CMD ["npx", "playwright", "test"]
