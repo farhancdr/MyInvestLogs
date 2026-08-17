@@ -13,6 +13,12 @@ Self-hosted. Your data stays in a SQLite file on your machine.
 
 </div>
 
+> [!IMPORTANT]
+> **Use this template and choose Private.** GitHub's dialog defaults to Public, and this app
+> **commits its database** — that is how a clone restores your records. A public copy publishes
+> every business, amount and date you enter, and git keeps that history even if you delete the
+> file later. Run `npm run guard:install` once and a pre-commit hook enforces it for you.
+
 ![Dashboard](docs/images/dashboard.png)
 
 ---
