@@ -34,7 +34,7 @@ export function Health() {
           : `${total} item${total === 1 ? '' : 's'} to look at`}
       />
 
-      <div className="mb-4 grid gap-3 sm:grid-cols-3">
+      <div className="mb-4 grid grid-cols-3 gap-2 sm:gap-3">
         {(Object.keys(SEVERITY) as IssueSeverity[]).map((severity) => {
           const { label, icon: Icon, className } = SEVERITY[severity];
           return (
@@ -43,9 +43,7 @@ export function Health() {
                 <Icon className={cn('size-4', className)} />
                 {label}
               </div>
-              <div className="mt-1.5 text-[27px] font-semibold tracking-tight">
-                {counts[severity]}
-              </div>
+              <div className="figure mt-1.5 text-[24px] sm:text-[30px]">{counts[severity]}</div>
             </div>
           );
         })}
@@ -74,10 +72,10 @@ function IssueRow({ issue }: { issue: HealthIssue }) {
     : issue.businessId ? `/business/${issue.businessId}` : null;
 
   return (
-    <li className="flex items-start gap-3 py-4 first:pt-0 last:pb-0">
-      <Icon className={cn('mt-0.5 size-4 shrink-0', className)} />
-
-      <div className="min-w-0 flex-1">
+    <li className="flex flex-col gap-2 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-start sm:gap-3">
+      <div className="flex min-w-0 flex-1 gap-3">
+        <Icon className={cn('mt-0.5 size-4 shrink-0', className)} />
+        <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <span className="font-medium">{issue.title}</span>
           <Badge variant="outline" className="text-[11px]">{label}</Badge>
@@ -87,11 +85,13 @@ function IssueRow({ issue }: { issue: HealthIssue }) {
         </div>
         <p className="mt-1 text-sm text-muted-foreground">{issue.detail}</p>
         {/* What to actually do about it — an issue without a next step is noise. */}
-        <p className="mt-1.5 text-sm">{issue.action}</p>
+          <p className="mt-1.5 text-sm">{issue.action}</p>
+        </div>
       </div>
 
       {target && (
-        <Button variant="ghost" size="sm" onClick={() => navigate(target)}>Open</Button>
+        <Button variant="ghost" size="sm" className="self-start sm:self-auto"
+          onClick={() => navigate(target)}>Open</Button>
       )}
     </li>
   );

@@ -32,6 +32,30 @@ export const ADJUSTMENT_EFFECT = {
   DECREASE: 'Decrease',
 } as const;
 
+/**
+ * A fixed list, not free text. Allocation and drift group by industry, and
+ * free text fragments those groups the moment two spellings appear.
+ */
+export const INDUSTRIES = [
+  'Food & Beverage',
+  'Retail',
+  'Wholesale & Trading',
+  'Textiles',
+  'Manufacturing',
+  'Agriculture & Fisheries',
+  'Import & Export',
+  'Transport & Logistics',
+  'Construction & Real Estate',
+  'Pharmaceuticals',
+  'Electronics',
+  'Technology & Software',
+  'Education',
+  'Healthcare',
+  'Hospitality & Tourism',
+  'Professional Services',
+  'Other',
+] as const;
+
 export const BUSINESS_STATUSES = ['Active', 'Closed', 'Defaulted', 'Exited'] as const;
 export const INVESTMENT_STATUSES = ['Active', 'Matured', 'Exited', 'Defaulted'] as const;
 export const RISK_LEVELS = ['Low', 'Medium', 'High'] as const;

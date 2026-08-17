@@ -67,7 +67,6 @@ export function BusinessDetail({ id, onAddInvestment }: {
           <Fact label="Contact" value={b.contact} />
           <Fact label="Location" value={b.location} />
           <Fact label="Industry" value={b.industry} />
-          <Fact label="Business type" value={b.businessType} />
           <Fact label="Business started" value={b.startDate} />
           <Fact label="First invested" value={data.investmentStartDate} />
         </div>

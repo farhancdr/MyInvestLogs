@@ -94,7 +94,7 @@ const investment = (over: Partial<InvestmentMetrics> = {}): InvestmentMetrics =>
 });
 
 const businesses: Business[] = [{
-  id: 'BIZ-001', name: 'Padma Restaurant', businessType: '', industry: 'Food',
+  id: 'BIZ-001', name: 'Padma Restaurant', industry: 'Food & Beverage',
   owner: '', contact: '', location: '', startDate: null, status: 'Active',
   description: '', riskLevel: 'Medium', notes: '', createdAt: '', updatedAt: '',
 }];

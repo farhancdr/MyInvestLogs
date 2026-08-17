@@ -8,7 +8,7 @@
 import { getSetting } from '../db/index.ts';
 import { today, toIsoDate } from './dates.ts';
 import {
-  RETURN_MODEL, RETURN_MODELS, TXN_TYPES, ADJUSTMENT_EFFECT,
+  RETURN_MODEL, RETURN_MODELS, TXN_TYPES, ADJUSTMENT_EFFECT, INDUSTRIES,
   BUSINESS_STATUSES, INVESTMENT_STATUSES, RISK_LEVELS, PAYMENT_METHODS,
 } from '../../shared/constants.ts';
 import type { ApiError, Investment, Transaction } from '../../shared/types.ts';
@@ -52,8 +52,10 @@ const num = (value: unknown): number | null => {
 /* ---------- businesses ---------- */
 
 export function validateBusiness(data: Record<string, unknown>): void {
-  required(data, ['name', 'status']);
+  required(data, ['name', 'status', 'industry']);
   oneOf(data.status, BUSINESS_STATUSES, 'status');
+  // Chosen from a list so allocation groups cannot fragment on spelling.
+  oneOf(data.industry, INDUSTRIES, 'industry');
   if (data.riskLevel) oneOf(data.riskLevel, RISK_LEVELS, 'riskLevel');
   if (data.startDate && !toIsoDate(data.startDate)) {
     fail('startDate must be a valid date.', 'startDate');

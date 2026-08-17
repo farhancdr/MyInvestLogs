@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Menu, Plus } from 'lucide-react';
 import { Toaster } from '@/components/ui/sonner.tsx';
 import { Button } from '@/components/ui/button.tsx';
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
+} from '@/components/ui/sheet.tsx';
+import { ThemeToggle } from '@/components/ThemeToggle.tsx';
 import { cn } from '@/lib/utils.ts';
 import { useRoute, navigate } from '@/lib/router.ts';
 import { api } from '@/lib/api.ts';
@@ -34,6 +39,7 @@ export function App() {
   const route = useRoute();
   const [dialog, setDialog] = useState<Dialog>(null);
   const [version, setVersion] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // Lists the dialogs need. Reloaded whenever a write bumps the version.
   const [businesses, setBusinesses] = useState<Business[]>([]);
@@ -85,11 +91,49 @@ export function App() {
 
   return (
     <>
-      <header className="sticky top-0 z-20 flex h-14 items-center gap-7 border-b bg-background px-6">
-        <span className="font-[family-name:var(--font-heading)] text-[19px] font-semibold">
+      <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-background px-4 sm:gap-7 sm:px-6">
+        {/* Below the desktop breakpoint the six links go into a drawer rather
+            than a scrolling strip, which is unusable on a narrow screen. */}
+        <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="icon-sm" className="lg:hidden" aria-label="Menu">
+              <Menu />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-[260px]">
+            <SheetHeader>
+              <SheetTitle className="font-[family-name:var(--font-heading)]">
+                MyInvestLogs
+              </SheetTitle>
+            </SheetHeader>
+            <nav className="flex flex-col gap-1 px-4">
+              {NAV.map((item) => {
+                const active = item.match.includes(route.name);
+                return (
+                  <a
+                    key={item.path}
+                    href={`#${item.path}`}
+                    onClick={() => setMenuOpen(false)}
+                    className={cn(
+                      'rounded-md px-3 py-2.5 text-sm tracking-[0.04em]',
+                      active
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-muted-foreground hover:bg-foreground/5 hover:text-foreground',
+                    )}
+                  >
+                    {item.label}
+                  </a>
+                );
+              })}
+            </nav>
+          </SheetContent>
+        </Sheet>
+
+        <span className="flex-1 truncate font-[family-name:var(--font-heading)] text-[19px] font-semibold lg:flex-none">
           MyInvestLogs
         </span>
-        <nav className="flex flex-1 gap-6 overflow-x-auto">
+
+        <nav className="hidden flex-1 gap-6 lg:flex">
           {NAV.map((item) => {
             const active = item.match.includes(route.name);
             return (
@@ -110,12 +154,16 @@ export function App() {
             );
           })}
         </nav>
+
+        <ThemeToggle />
+
         <Button size="sm" onClick={() => setDialog({ kind: 'transaction' })}>
-          Record transaction
+          <Plus className="sm:hidden" />
+          <span className="hidden sm:inline">Record transaction</span>
         </Button>
       </header>
 
-      <main className="mx-auto max-w-[1240px] p-6">{page}</main>
+      <main className="mx-auto max-w-[1240px] p-4 sm:p-6">{page}</main>
 
       {dialog?.kind === 'business' && (
         <BusinessForm onClose={() => setDialog(null)} onSaved={refresh} />

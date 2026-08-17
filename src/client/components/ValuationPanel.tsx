@@ -54,7 +54,7 @@ export function ValuationPanel({
         </InfoNotice>
       )}
 
-      <div className="mt-4 flex items-center justify-between gap-3">
+      <div className="mt-4 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs text-muted-foreground">
           Unrealized gains are shown here only. They never enter realized ROI, because a
           self-reported mark is an estimate.
@@ -73,7 +73,7 @@ export function ValuationPanel({
             {valuations.map((v) => (
               <li
                 key={v.id}
-                className="grid grid-cols-[100px_1fr_auto] items-baseline gap-3 border-b py-2 text-sm last:border-0"
+                className="grid grid-cols-[auto_1fr] items-baseline gap-x-3 gap-y-1 border-b py-2 text-sm last:border-0 sm:grid-cols-[100px_1fr_auto]"
               >
                 <span className="text-muted-foreground tabular">{v.date}</span>
                 <span className="text-muted-foreground">
@@ -81,7 +81,7 @@ export function ValuationPanel({
                   {v.confidence && ` · ${v.confidence} confidence`}
                   {v.notes && ` · ${v.notes}`}
                 </span>
-                <span className="font-semibold tabular">{money(v.estimatedValue)}</span>
+                <span className="col-start-2 font-semibold tabular sm:col-auto sm:text-right">{money(v.estimatedValue)}</span>
               </li>
             ))}
           </ul>

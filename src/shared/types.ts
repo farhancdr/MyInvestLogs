@@ -1,5 +1,5 @@
 import type {
-  TXN_TYPE, RETURN_MODEL, ADJUSTMENT_EFFECT,
+  TXN_TYPE, RETURN_MODEL, ADJUSTMENT_EFFECT, INDUSTRIES,
   BUSINESS_STATUSES, INVESTMENT_STATUSES, RISK_LEVELS, PAYMENT_METHODS,
 } from './constants.ts';
 
@@ -10,6 +10,7 @@ export type BusinessStatus = (typeof BUSINESS_STATUSES)[number];
 export type InvestmentStatus = (typeof INVESTMENT_STATUSES)[number];
 export type RiskLevel = (typeof RISK_LEVELS)[number];
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
+export type Industry = (typeof INDUSTRIES)[number];
 
 /** ISO `yyyy-MM-dd`. Dates are stored and compared as strings. */
 export type IsoDate = string;
@@ -17,8 +18,7 @@ export type IsoDate = string;
 export interface Business {
   id: string;
   name: string;
-  businessType: string;
-  industry: string;
+  industry: Industry | '';
   owner: string;
   contact: string;
   location: string;

@@ -104,16 +104,16 @@ export function PageHeader({
   title, subtitle, actions,
 }: { title: string; subtitle?: ReactNode; actions?: ReactNode }) {
   return (
-    <div className="mb-5 flex items-start justify-between gap-4">
+    <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
       <div>
-        <h1 className="text-[32px]">{title}</h1>
+        <h1 className="text-[26px] sm:text-[32px]">{title}</h1>
         {subtitle && (
-          <div className="mt-0.5 flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             {subtitle}
           </div>
         )}
       </div>
-      {actions && <div className="flex gap-2">{actions}</div>}
+      {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
     </div>
   );
 }

@@ -11,7 +11,8 @@ test('a business, an investment and a transaction can be recorded end to end', a
 
   await page.getByRole('button', { name: 'Add business' }).click();
   await page.getByLabel('Business name').fill(businessName);
-  await page.getByLabel('Industry').fill('Testing');
+  await page.getByRole('combobox', { name: 'Industry' }).click();
+  await page.getByRole('option', { name: 'Professional Services' }).click();
   await page.getByRole('button', { name: 'Save business' }).click();
   await expect(page.getByText('Business added')).toBeVisible();
 

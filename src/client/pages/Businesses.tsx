@@ -32,15 +32,15 @@ export function Businesses({ onAddBusiness }: { onAddBusiness: () => void }) {
         actions={<Button onClick={onAddBusiness}>Add business</Button>}
       />
 
-      <div className="mb-4 flex flex-wrap items-center gap-2">
+      <div className="mb-4 grid gap-2 sm:flex sm:flex-wrap sm:items-center">
         <Input
-          type="search" placeholder="Search businesses…" className="h-8 w-[220px]"
+          type="search" placeholder="Search businesses…" className="h-8 w-full sm:w-[220px]"
           value={filters.search} onChange={(e) => set('search', e.target.value)}
         />
         <FilterSelect value={filters.status} onChange={(v) => set('status', v)}
-          allLabel="All statuses" options={BUSINESS_STATUSES} className="w-[150px]" />
+          allLabel="All statuses" options={BUSINESS_STATUSES} className="sm:w-[150px]" />
         <FilterSelect value={filters.riskLevel} onChange={(v) => set('riskLevel', v)}
-          allLabel="All risk levels" options={RISK_LEVELS} className="w-[150px]" />
+          allLabel="All risk levels" options={RISK_LEVELS} className="sm:w-[150px]" />
       </div>
 
       <ErrorNotice message={error} />

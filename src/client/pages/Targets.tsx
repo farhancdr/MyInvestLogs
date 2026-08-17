@@ -103,7 +103,7 @@ export function Targets() {
         </Panel>
       ) : (
         <>
-          <div className="mb-4 grid gap-3 sm:grid-cols-3">
+          <div className="mb-4 grid grid-cols-3 gap-2 sm:gap-3">
             <Tile label="Capital outstanding" value={money(drift.totalOutstanding)} />
             <Tile
               label="Targets entered"
@@ -191,8 +191,8 @@ function Tile({
 }: { label: string; value: string; note?: string; tone?: string }) {
   return (
     <div className="rounded-lg border bg-card p-4">
-      <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className={cn('mt-1.5 text-[27px] font-semibold tracking-tight', tone)}>{value}</div>
+      <div className="text-[10.5px] font-semibold uppercase tracking-[0.09em] text-muted-foreground">{label}</div>
+      <div className={cn('figure mt-1.5 text-[22px] sm:text-[30px]', tone)}>{value}</div>
       {note && <div className="mt-0.5 text-xs text-loss">{note}</div>}
     </div>
   );

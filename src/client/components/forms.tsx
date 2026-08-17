@@ -13,7 +13,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select.tsx';
 import {
-  BUSINESS_STATUSES, RISK_LEVELS, PAYMENT_METHODS,
+  BUSINESS_STATUSES, RISK_LEVELS, PAYMENT_METHODS, INDUSTRIES,
   RETURN_MODELS, RETURN_MODEL, TXN_TYPE,
 } from '@shared/constants.ts';
 import type { Business, InvestmentMetrics } from '@shared/types.ts';
@@ -58,7 +58,7 @@ function Choice({
 
 export function BusinessForm({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
   const [form, setForm] = useState({
-    name: '', businessType: '', industry: '', owner: '', contact: '',
+    name: '', industry: '', owner: '', contact: '',
     location: '', startDate: '', status: 'Active', riskLevel: 'Medium', description: '',
   });
   const [error, setError] = useState<string | null>(null);
@@ -90,17 +90,18 @@ export function BusinessForm({ onClose, onSaved }: { onClose: () => void; onSave
             <Input id="bf-name" value={form.name} onChange={(e) => set('name', e.target.value)} autoFocus />
           </Field>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Business type" htmlFor="bf-type">
-              <Input id="bf-type" value={form.businessType}
-                onChange={(e) => set('businessType', e.target.value)}
-                placeholder="Restaurant, trading, service…" />
-            </Field>
-            <Field label="Industry" htmlFor="bf-industry" hint="Groups the allocation chart">
-              <Input id="bf-industry" value={form.industry}
-                onChange={(e) => set('industry', e.target.value)} />
-            </Field>
-          </div>
+          <Field label="Industry" hint="Groups the allocation chart and drift report">
+            <Select value={form.industry} onValueChange={(v) => set('industry', v)}>
+              <SelectTrigger className="w-full" aria-label="Industry">
+                <SelectValue placeholder="Choose an industry" />
+              </SelectTrigger>
+              <SelectContent>
+                {INDUSTRIES.map((i) => (
+                  <SelectItem key={i} value={i}>{i}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Owner / operator" htmlFor="bf-owner">

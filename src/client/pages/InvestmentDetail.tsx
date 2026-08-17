@@ -149,7 +149,7 @@ export function InvestmentDetail({ id, onAddTransaction }: {
             {data.transactions.map((t) => (
               <li
                 key={t.id}
-                className="grid grid-cols-[100px_1fr_auto] items-baseline gap-3 border-b py-2.5 last:border-0"
+                className="grid grid-cols-[auto_1fr] items-baseline gap-x-3 gap-y-1 border-b py-2.5 last:border-0 sm:grid-cols-[100px_1fr_auto]"
               >
                 <span className="text-sm text-muted-foreground tabular">{t.date}</span>
                 <span className="text-sm">
@@ -163,7 +163,7 @@ export function InvestmentDetail({ id, onAddTransaction }: {
                 </span>
                 <span
                   className={cn(
-                    'font-semibold tabular',
+                    'col-start-2 font-semibold tabular sm:col-auto sm:text-right',
                     t.type === TXN_TYPE.LOSS
                       ? 'text-loss'
                       : OUTFLOW.includes(t.type) ? '' : 'text-gain',

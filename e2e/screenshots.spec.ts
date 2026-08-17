@@ -76,3 +76,23 @@ test('add investment dialog with live review', async ({ page }) => {
   await page.waitForTimeout(300);
   await page.screenshot({ path: shot('add-investment', 'light') });
 });
+
+/** A phone-width capture for the README, so the responsive claim is visible. */
+test.describe('mobile', () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test('dashboard on a phone', async ({ page }) => {
+    await page.goto('/#/dashboard');
+    await expect(page.locator('[data-kpi="Total Invested"]')).toBeVisible();
+    await page.waitForTimeout(900);
+    await page.screenshot({ path: 'docs/images/mobile.png', fullPage: true });
+  });
+
+  test('navigation drawer', async ({ page }) => {
+    await page.goto('/#/dashboard');
+    await page.getByRole('button', { name: 'Menu' }).click();
+    await expect(page.getByRole('link', { name: 'Health' })).toBeVisible();
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: 'docs/images/mobile-nav.png' });
+  });
+});

@@ -10,7 +10,7 @@ import type {
 /* ---------- row shapes ---------- */
 
 type BusinessRow = {
-  id: string; name: string; business_type: string; industry: string; owner: string;
+  id: string; name: string; industry: string; owner: string;
   contact: string; location: string; start_date: string | null; status: string;
   description: string; risk_level: string; notes: string;
   created_at: string; updated_at: string;
@@ -43,8 +43,7 @@ type ValuationRow = {
 const toBusiness = (r: BusinessRow): Business => ({
   id: r.id,
   name: r.name,
-  businessType: r.business_type,
-  industry: r.industry,
+  industry: r.industry as Business['industry'],
   owner: r.owner,
   contact: r.contact,
   location: r.location,
@@ -156,10 +155,10 @@ export const recentAudit = (limit = 100): AuditEntry[] =>
 export function insertBusiness(b: Business): void {
   db().prepare(
     `INSERT INTO businesses
-      (id, name, business_type, industry, owner, contact, location, start_date,
+      (id, name, industry, owner, contact, location, start_date,
        status, description, risk_level, notes, created_at, updated_at)
      VALUES
-      (@id, @name, @businessType, @industry, @owner, @contact, @location, @startDate,
+      (@id, @name, @industry, @owner, @contact, @location, @startDate,
        @status, @description, @riskLevel, @notes, @createdAt, @updatedAt)`,
   ).run(b);
 }
@@ -167,7 +166,7 @@ export function insertBusiness(b: Business): void {
 export function updateBusinessRow(b: Business): void {
   db().prepare(
     `UPDATE businesses SET
-      name = @name, business_type = @businessType, industry = @industry, owner = @owner,
+      name = @name, industry = @industry, owner = @owner,
       contact = @contact, location = @location, start_date = @startDate, status = @status,
       description = @description, risk_level = @riskLevel, notes = @notes,
       updated_at = @updatedAt

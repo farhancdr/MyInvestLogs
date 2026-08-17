@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils.ts';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select.tsx';
@@ -23,7 +24,7 @@ export function FilterSelect({
 
   return (
     <Select value={value || ALL} onValueChange={(v) => onChange(v === ALL ? '' : v)}>
-      <SelectTrigger className={className ?? 'w-[180px]'} size="sm">
+      <SelectTrigger className={cn('w-full', className ?? 'sm:w-[180px]')} size="sm">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

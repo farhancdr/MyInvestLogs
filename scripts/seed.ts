@@ -44,8 +44,7 @@ interface InvestmentPlan {
 
 interface BusinessPlan {
   name: string;
-  type: string;
-  industry: string;
+  industry: Business['industry'];
   owner: string;
   location: string;
   risk: Business['riskLevel'];
@@ -57,7 +56,7 @@ interface BusinessPlan {
 
 const PLAN: BusinessPlan[] = [
   {
-    name: 'Padma Restaurant', type: 'Restaurant', industry: 'Food & Beverage',
+    name: 'Padma Restaurant', industry: 'Food & Beverage',
     owner: 'Rezaul Karim', location: 'Dhanmondi, Dhaka', risk: 'Medium', status: 'Active',
     start: '2024-11-01', description: 'Casual dining restaurant with 60 covers.',
     investments: [
@@ -78,7 +77,7 @@ const PLAN: BusinessPlan[] = [
     ],
   },
   {
-    name: 'Meghna Trading', type: 'Trading', industry: 'Import & Export',
+    name: 'Meghna Trading', industry: 'Import & Export',
     owner: 'Nusrat Jahan', location: 'Chattogram', risk: 'High', status: 'Active',
     start: '2024-06-15', description: 'Commodity import and wholesale distribution.',
     investments: [
@@ -93,7 +92,7 @@ const PLAN: BusinessPlan[] = [
     ],
   },
   {
-    name: 'Bengal Textiles', type: 'Manufacturing', industry: 'Textiles',
+    name: 'Bengal Textiles', industry: 'Textiles',
     owner: 'Shahidul Alam', location: 'Narayanganj', risk: 'Low', status: 'Active',
     start: '2023-02-01', description: 'Knitwear unit supplying two export houses.',
     investments: [
@@ -112,7 +111,7 @@ const PLAN: BusinessPlan[] = [
     ],
   },
   {
-    name: 'Karnaphuli Logistics', type: 'Service', industry: 'Transport & Logistics',
+    name: 'Karnaphuli Logistics', industry: 'Transport & Logistics',
     owner: 'Tanvir Hasan', location: 'Chattogram', risk: 'Medium', status: 'Active',
     start: '2025-05-01', description: 'Container haulage between port and inland depots.',
     investments: [
@@ -126,7 +125,7 @@ const PLAN: BusinessPlan[] = [
     ],
   },
   {
-    name: 'Jamuna Electronics', type: 'Retail', industry: 'Electronics',
+    name: 'Jamuna Electronics', industry: 'Electronics',
     owner: 'Farid Uddin', location: 'Uttara, Dhaka', risk: 'High', status: 'Defaulted',
     start: '2024-09-10', description: 'Consumer electronics retail. Stopped paying in late 2025.',
     investments: [
@@ -183,7 +182,7 @@ function seed(): void {
     for (const biz of PLAN) {
       const businessId = nextId('business');
       repo.insertBusiness({
-        id: businessId, name: biz.name, businessType: biz.type, industry: biz.industry,
+        id: businessId, name: biz.name, industry: biz.industry,
         owner: biz.owner, contact: '+8801700000000', location: biz.location,
         startDate: biz.start, status: biz.status, description: biz.description,
         riskLevel: biz.risk, notes: MARKER, createdAt: stamp, updatedAt: stamp,

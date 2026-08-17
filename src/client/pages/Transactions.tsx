@@ -51,16 +51,16 @@ export function Transactions({ onAddTransaction }: { onAddTransaction: () => voi
         actions={<Button onClick={onAddTransaction}>Record transaction</Button>}
       />
 
-      <div className="mb-4 flex flex-wrap items-center gap-2">
+      <div className="mb-4 grid gap-2 sm:flex sm:flex-wrap sm:items-center">
         <Input
-          type="search" placeholder="Search reference or notes…" className="h-8 w-[240px]"
+          type="search" placeholder="Search reference or notes…" className="h-8 w-full sm:w-[240px]"
           value={filters.search} onChange={(e) => set('search', e.target.value)}
         />
         <FilterSelect value={filters.type} onChange={(v) => set('type', v)}
           allLabel="All types" options={TXN_TYPES} />
-        <Input type="date" className="h-8 w-[150px]" value={filters.dateFrom}
+        <Input type="date" className="h-8 w-full sm:w-[150px]" value={filters.dateFrom}
           onChange={(e) => set('dateFrom', e.target.value)} />
-        <Input type="date" className="h-8 w-[150px]" value={filters.dateTo}
+        <Input type="date" className="h-8 w-full sm:w-[150px]" value={filters.dateTo}
           onChange={(e) => set('dateTo', e.target.value)} />
         <Button variant="ghost" size="sm" onClick={() => setFilters(NO_FILTERS)}>Clear</Button>
       </div>

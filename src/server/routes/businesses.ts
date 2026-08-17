@@ -69,8 +69,7 @@ businesses.post('/', async (c) => {
       const business: Business = {
         id: nextId('business'),
         name: String(body.name),
-        businessType: String(body.businessType ?? ''),
-        industry: String(body.industry ?? ''),
+        industry: (body.industry ?? '') as Business['industry'],
         owner: String(body.owner ?? ''),
         contact: String(body.contact ?? ''),
         location: String(body.location ?? ''),
@@ -100,7 +99,7 @@ businesses.patch('/:id', async (c) => {
       if (!existing) throw new ValidationError('Business not found.', undefined, 'NOT_FOUND');
 
       const editable = [
-        'name', 'businessType', 'industry', 'owner', 'contact', 'location',
+        'name', 'industry', 'owner', 'contact', 'location',
         'startDate', 'status', 'description', 'riskLevel', 'notes',
       ] as const;
 
