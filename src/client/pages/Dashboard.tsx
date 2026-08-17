@@ -84,6 +84,28 @@ export function Dashboard({ onAddBusiness, onAddInvestment }: {
         />
       </div>
 
+      {/* Only shown once something has been valued: an absent mark is not zero. */}
+      {k.unrealizedPnL !== null && (
+        <div className="mb-4">
+          <Panel>
+            <div className="flex flex-wrap items-baseline justify-between gap-3">
+              <div>
+                <div className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Unrealized P&amp;L
+                </div>
+                <div className={`mt-1 text-[22px] font-semibold ${tone(k.unrealizedPnL)}`}>
+                  {money(k.unrealizedPnL)}
+                </div>
+              </div>
+              <p className="max-w-[520px] text-xs text-muted-foreground">
+                Latest valuations against capital outstanding. Deliberately excluded from
+                Realized ROI — a self-reported mark is an estimate, not money received.
+              </p>
+            </div>
+          </Panel>
+        </div>
+      )}
+
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel title="Portfolio Over Time">
           <PortfolioTrend data={data.charts.portfolioOverTime} />

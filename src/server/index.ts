@@ -15,6 +15,7 @@ import { db, allSettings, setSetting, transaction } from './db/index.ts';
 import { businesses } from './routes/businesses.ts';
 import { investments } from './routes/investments.ts';
 import { transactions } from './routes/transactions.ts';
+import { insights } from './routes/insights.ts';
 import { buildDashboard, portfolioMetrics } from './services/metrics.ts';
 import { writeAudit } from './services/audit.ts';
 import * as repo from './services/repo.ts';
@@ -49,6 +50,7 @@ api.patch('/settings/:key', async (c) => {
 api.route('/businesses', businesses);
 api.route('/investments', investments);
 api.route('/transactions', transactions);
+api.route('/', insights);
 
 app.route('/api', api);
 

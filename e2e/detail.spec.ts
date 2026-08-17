@@ -1,7 +1,11 @@
 import { test, expect, type Page } from '@playwright/test';
+import { resetSampleData } from './reset.ts';
 
 const summary = (page: Page, label: string) =>
   page.locator(`[data-summary="${label}"] [data-summary-value]`);
+
+// Every file starts from identical sample data.
+test.beforeAll(resetSampleData);
 
 test('an investment detail page separates principal from profit', async ({ page }) => {
   await page.goto('/#/investments');

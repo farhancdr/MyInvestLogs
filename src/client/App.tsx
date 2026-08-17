@@ -10,6 +10,8 @@ import { BusinessDetail } from '@/pages/BusinessDetail.tsx';
 import { Investments } from '@/pages/Investments.tsx';
 import { InvestmentDetail } from '@/pages/InvestmentDetail.tsx';
 import { Transactions } from '@/pages/Transactions.tsx';
+import { Health } from '@/pages/Health.tsx';
+import { Targets } from '@/pages/Targets.tsx';
 import { BusinessForm, InvestmentForm, TransactionForm } from '@/components/forms.tsx';
 import type { Business, InvestmentMetrics, Page } from '@shared/types.ts';
 
@@ -24,6 +26,8 @@ const NAV = [
   { path: '/businesses', label: 'Businesses', match: ['businesses', 'business'] },
   { path: '/investments', label: 'Investments', match: ['investments', 'investment'] },
   { path: '/transactions', label: 'Transactions', match: ['transactions'] },
+  { path: '/targets', label: 'Targets', match: ['targets'] },
+  { path: '/health', label: 'Health', match: ['health'] },
 ];
 
 export function App() {
@@ -68,6 +72,10 @@ export function App() {
       case 'transactions':
         return <Transactions key={version}
           onAddTransaction={() => setDialog({ kind: 'transaction' })} />;
+      case 'targets':
+        return <Targets key={version} />;
+      case 'health':
+        return <Health key={version} />;
       default:
         return <Dashboard key={version}
           onAddBusiness={() => setDialog({ kind: 'business' })}
@@ -77,9 +85,11 @@ export function App() {
 
   return (
     <>
-      <header className="sticky top-0 z-20 flex h-14 items-center gap-7 border-b bg-card px-6">
-        <span className="font-semibold tracking-tight">Investment Tracker</span>
-        <nav className="flex flex-1 gap-5 overflow-x-auto text-sm">
+      <header className="sticky top-0 z-20 flex h-14 items-center gap-7 border-b bg-background px-6">
+        <span className="font-[family-name:var(--font-heading)] text-[19px] font-semibold">
+          MyInvestLogs
+        </span>
+        <nav className="flex flex-1 gap-6 overflow-x-auto">
           {NAV.map((item) => {
             const active = item.match.includes(route.name);
             return (
@@ -88,10 +98,11 @@ export function App() {
                 href={`#${item.path}`}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'whitespace-nowrap border-b-2 py-1 transition-colors',
+                  'relative whitespace-nowrap py-1.5 text-[13px] tracking-[0.04em] transition-colors',
+                  'after:absolute after:inset-x-0 after:-bottom-px after:h-0.5',
                   active
-                    ? 'border-foreground text-foreground'
-                    : 'border-transparent text-muted-foreground hover:text-foreground',
+                    ? 'text-foreground after:bg-primary'
+                    : 'text-muted-foreground hover:text-foreground',
                 )}
               >
                 {item.label}

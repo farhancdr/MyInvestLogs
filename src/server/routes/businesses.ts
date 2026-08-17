@@ -36,12 +36,17 @@ businesses.get('/:id', (c) =>
 
     const own = repo.listInvestments().filter((i) => i.businessId === id);
     const transactions = repo.transactionsForBusiness(id);
+    const valuations = repo.listValuations();
 
     return {
       business,
-      metrics: portfolioMetrics(own, transactions),
+      metrics: portfolioMetrics(own, transactions, valuations),
       investments: own.map((i) =>
-        investmentMetrics(i, transactions.filter((t) => t.investmentId === i.id)),
+        investmentMetrics(
+          i,
+          transactions.filter((t) => t.investmentId === i.id),
+          valuations.filter((v) => v.investmentId === i.id),
+        ),
       ),
       transactions,
       // Derived on read; deliberately not a column.

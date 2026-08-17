@@ -168,3 +168,46 @@ export function validateTransaction(
     fail('Only Adjustment transactions may reference another transaction.', 'adjusts');
   }
 }
+
+/* ---------- valuations ---------- */
+
+export function validateValuation(data: Record<string, unknown>, investmentExists: boolean): void {
+  required(data, ['date', 'estimatedValue']);
+
+  if (!investmentExists) fail('Valuation must reference an existing investment.', 'investmentId');
+
+  const value = num(data.estimatedValue);
+  // Zero is legitimate — a stake written down to nothing still deserves a mark.
+  if (value === null || value < 0) {
+    fail('Estimated value cannot be negative.', 'estimatedValue');
+  }
+
+  const date = toIsoDate(data.date);
+  if (!date) fail('date must be a valid date.', 'date');
+  if (date! > today()) fail('A valuation cannot be dated in the future.', 'date');
+}
+
+/* ---------- allocation targets ---------- */
+
+export function validateTargets(scope: unknown, rows: unknown): void {
+  if (scope !== 'business' && scope !== 'industry') {
+    fail("scope must be 'business' or 'industry'.", 'scope');
+  }
+  if (!Array.isArray(rows)) fail('targets must be an array.', 'targets');
+
+  let total = 0;
+  for (const row of rows as Record<string, unknown>[]) {
+    if (!row.key || !String(row.key).trim()) fail('Every target needs a key.', 'key');
+    const pct = num(row.targetPct);
+    if (pct === null || pct < 0 || pct > 100) {
+      fail(`Target for ${row.key} must be between 0 and 100.`, 'targetPct');
+    }
+    total += pct as number;
+  }
+
+  // Allowed to under-allocate — the remainder is simply untargeted — but
+  // promising more than the whole portfolio is always a mistake.
+  if (total > 100.01) {
+    fail(`Targets add up to ${total.toFixed(1)}%, which is more than the portfolio.`, 'targets');
+  }
+}

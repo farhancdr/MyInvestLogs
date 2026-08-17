@@ -3,13 +3,15 @@ import { transaction } from '../db/index.ts';
 import { nextId } from '../services/ids.ts';
 import { writeAudit, diffFields } from '../services/audit.ts';
 import { now, toIsoDate } from '../services/dates.ts';
-import { validateInvestment, returnWarnings, ValidationError } from '../services/validate.ts';
+import {
+  validateInvestment, validateValuation, returnWarnings, ValidationError,
+} from '../services/validate.ts';
 import * as repo from '../services/repo.ts';
 import { investmentMetrics } from '../services/metrics.ts';
 import { addMonths } from '../../shared/calc.ts';
 import { TXN_TYPE } from '../../shared/constants.ts';
 import { handle, paginate, matches } from './helpers.ts';
-import type { Investment, Transaction } from '../../shared/types.ts';
+import type { Investment, Transaction, Valuation } from '../../shared/types.ts';
 
 export const investments = new Hono();
 
@@ -24,6 +26,7 @@ investments.get('/', (c) =>
     const query = c.req.query();
     const all = repo.listInvestments();
     const transactions = repo.listTransactions();
+    const valuations = repo.listValuations();
     const names = new Map(repo.listBusinesses().map((b) => [b.id, b.name]));
 
     const rows = all
@@ -33,7 +36,11 @@ investments.get('/', (c) =>
       .filter((i) => !query.riskLevel || i.riskLevel === query.riskLevel)
       .filter((i) => matches([i.name, i.id, names.get(i.businessId)], query.search))
       .map((i) => ({
-        ...investmentMetrics(i, transactions.filter((t) => t.investmentId === i.id)),
+        ...investmentMetrics(
+          i,
+          transactions.filter((t) => t.investmentId === i.id),
+          valuations.filter((v) => v.investmentId === i.id),
+        ),
         businessName: names.get(i.businessId) ?? '',
       }));
 
@@ -48,13 +55,14 @@ investments.get('/:id', (c) =>
     if (!investment) throw new ValidationError('Investment not found.', undefined, 'NOT_FOUND');
 
     const transactions = repo.transactionsForInvestment(id);
+    const valuations = repo.valuationsForInvestment(id);
 
     return {
       investment,
       business: repo.findBusiness(investment.businessId),
-      metrics: investmentMetrics(investment, transactions),
+      metrics: investmentMetrics(investment, transactions, valuations),
       transactions,
-      valuations: repo.valuationsForInvestment(id),
+      valuations,
     };
   }),
 );
@@ -153,6 +161,45 @@ investments.patch('/:id', async (c) => {
       writeAudit('update', 'Investment', id, diffFields(existing, merged));
 
       return { investment: merged, warnings: returnWarnings(merged) };
+    }),
+  );
+});
+
+/* ---------- valuations ---------- */
+
+investments.get('/:id/valuations', (c) =>
+  handle(c, () => repo.valuationsForInvestment(c.req.param('id'))),
+);
+
+/**
+ * Records what the stake is currently worth.
+ *
+ * Marks are append-only like transactions, and deliberately kept out of
+ * realized ROI: a self-reported valuation is an estimate, and folding estimates
+ * into a headline return is how a tracker starts flattering its owner.
+ */
+investments.post('/:id/valuations', async (c) => {
+  const id = c.req.param('id');
+  const body = await c.req.json<Record<string, unknown>>();
+
+  return handle(c, () =>
+    transaction(() => {
+      const investment = repo.findInvestment(id);
+      validateValuation(body, !!investment);
+
+      const valuation: Valuation = {
+        id: nextId('valuation'),
+        investmentId: id,
+        date: toIsoDate(body.date)!,
+        estimatedValue: Number(body.estimatedValue),
+        method: String(body.method ?? 'Manual'),
+        confidence: String(body.confidence ?? 'Medium'),
+        notes: String(body.notes ?? ''),
+      };
+
+      repo.insertValuation(valuation);
+      writeAudit('create', 'Valuation', valuation.id, valuation);
+      return valuation;
     }),
   );
 });

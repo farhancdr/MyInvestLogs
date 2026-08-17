@@ -12,7 +12,7 @@ export function Panel({
     <Card className={cn('mb-4', className)}>
       {title && (
         <CardHeader className="flex flex-row items-baseline justify-between gap-3 pb-0">
-          <CardTitle className="text-[15px] font-semibold">{title}</CardTitle>
+          <CardTitle className="text-[19px]">{title}</CardTitle>
           {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
         </CardHeader>
       )}
@@ -28,8 +28,10 @@ export function Kpi({
   return (
     <Card data-kpi={label}>
       <CardContent className="p-4">
-        <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
-        <div data-kpi-value className={cn('mt-1.5 text-[27px] font-semibold tracking-tight', valueTone)}>
+        <div className="text-[10.5px] font-semibold uppercase tracking-[0.09em] text-muted-foreground">
+          {label}
+        </div>
+        <div data-kpi-value className={cn('figure mt-1.5 text-[30px]', valueTone)}>
           {value}
         </div>
         {note && <div className="mt-0.5 text-xs text-muted-foreground">{note}</div>}
@@ -56,7 +58,7 @@ export function SummaryItem({
   return (
     <div className="border-b py-2.5" data-summary={label}>
       <div className="text-xs text-muted-foreground">{label}</div>
-      <div data-summary-value className={cn('mt-0.5 text-[17px] font-semibold tabular', valueTone)}>
+      <div data-summary-value className={cn('figure mt-0.5 text-[19px]', valueTone)}>
         {value}
       </div>
     </div>
@@ -104,7 +106,7 @@ export function PageHeader({
   return (
     <div className="mb-5 flex items-start justify-between gap-4">
       <div>
-        <h1 className="text-[22px] font-semibold tracking-tight">{title}</h1>
+        <h1 className="text-[32px]">{title}</h1>
         {subtitle && (
           <div className="mt-0.5 flex items-center gap-2 text-sm text-muted-foreground">
             {subtitle}

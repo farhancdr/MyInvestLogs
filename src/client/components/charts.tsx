@@ -93,6 +93,7 @@ export function PortfolioTrend({ data }: { data: PortfolioPoint[] }) {
                 stroke={s.color}
                 strokeWidth={2}
                 dot={false}
+                isAnimationActive={false}
                 activeDot={{ r: 4, strokeWidth: 2, stroke: 'var(--card)' }}
               />
             ))}
@@ -123,8 +124,8 @@ export function CashFlowChart({ data }: { data: MonthlyCashFlow[] }) {
             <YAxis tickFormatter={moneyShort} width={52} {...axis} />
             <Tooltip content={<MoneyTooltip />} cursor={{ fill: 'var(--muted)' }} />
             <ReferenceLine y={0} stroke="var(--axis)" />
-            <Bar dataKey="In" fill="var(--flow-in)" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="Out" fill="var(--flow-out)" radius={[0, 0, 4, 4]} />
+            <Bar dataKey="In" fill="var(--flow-in)" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+            <Bar dataKey="Out" fill="var(--flow-out)" radius={[0, 0, 4, 4]} isAnimationActive={false} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -149,7 +150,7 @@ export function MonthlyProfitChart({ data }: { data: MonthlyCashFlow[] }) {
           <YAxis tickFormatter={moneyShort} width={52} {...axis} />
           <Tooltip content={<MoneyTooltip />} cursor={{ fill: 'var(--muted)' }} />
           <ReferenceLine y={0} stroke="var(--axis)" />
-          <Bar dataKey="profit" name="Profit" radius={[4, 4, 0, 0]}>
+          <Bar dataKey="profit" name="Profit" radius={[4, 4, 0, 0]} isAnimationActive={false}>
             {data.map((d) => (
               <Cell key={d.month} fill={d.profit < 0 ? 'var(--flow-out)' : 'var(--flow-in)'} />
             ))}

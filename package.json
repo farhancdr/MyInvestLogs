@@ -23,7 +23,8 @@
     "screenshots": "playwright test e2e/screenshots.spec.ts",
     "guard": "node scripts/check-visibility.mjs",
     "guard:install": "git config core.hooksPath .githooks && node scripts/check-visibility.mjs",
-    "db:untrack": "git rm --cached data/tracker.db && printf \"\ndata/tracker.db\n\" >> .gitignore && echo \"Database untracked. It stays on disk; use npm run dump for backups.\""
+    "db:untrack": "git rm --cached data/tracker.db && printf \"\ndata/tracker.db\n\" >> .gitignore && echo \"Database untracked. It stays on disk; use npm run dump for backups.\"",
+    "seed:reset": "tsx scripts/seed.ts --reset"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",

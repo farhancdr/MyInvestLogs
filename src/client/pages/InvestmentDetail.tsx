@@ -7,6 +7,7 @@ import {
 } from '@/components/ui.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { Skeleton } from '@/components/ui/skeleton.tsx';
+import { ValuationPanel } from '@/components/ValuationPanel.tsx';
 import { TXN_TYPE } from '@shared/constants.ts';
 import type {
   Investment, Business, InvestmentMetrics, Transaction, Valuation,
@@ -26,7 +27,7 @@ export function InvestmentDetail({ id, onAddTransaction }: {
   id: string;
   onAddTransaction: (investmentId: string) => void;
 }) {
-  const { data, error, loading } = useApi<InvestmentDetailData>(
+  const { data, error, loading, reload } = useApi<InvestmentDetailData>(
     () => api.get(`/investments/${id}`), [id],
   );
 
@@ -115,6 +116,13 @@ export function InvestmentDetail({ id, onAddTransaction }: {
           </InfoNotice>
         </Panel>
       )}
+
+      <ValuationPanel
+        investmentId={inv.id}
+        metrics={m}
+        valuations={data.valuations}
+        onRecorded={reload}
+      />
 
       <Panel title="Terms">
         <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-4">

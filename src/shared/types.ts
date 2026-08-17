@@ -146,17 +146,24 @@ export interface InvestmentMetrics extends Totals {
   riskLevel: RiskLevel;
   returnModel: ReturnModel;
   investmentDate: IsoDate;
+  maturityDate: IsoDate | null;
   initialInvestment: number;
   expected: ExpectedReturn | null;
   expectedVsActual: ExpectedVsActual | null;
   remainingExpectedProfit: number | null;
   annualized: AnnualizedReturn | null;
   transactionCount: number;
+  /** Latest recorded mark, and its gap to capital outstanding. */
+  latestValuation: Valuation | null;
+  unrealizedPnL: number | null;
+  lastTransactionDate: IsoDate | null;
 }
 
 export interface PortfolioMetrics extends Totals {
   activeInvestments: number;
   remainingExpectedProfit: number | null;
+  /** Sum of marks against outstanding capital, kept out of realized ROI. */
+  unrealizedPnL: number | null;
 }
 
 export interface BusinessSummary extends Totals {
@@ -192,6 +199,65 @@ export interface DashboardData {
     allocationByIndustry: AllocationSlice[];
   };
   generatedAt: string;
+}
+
+/* ---------- valuations, health and allocation ---------- */
+
+export type IssueSeverity = 'critical' | 'warning' | 'info';
+
+export interface HealthIssue {
+  id: string;
+  kind: string;
+  severity: IssueSeverity;
+  title: string;
+  detail: string;
+  action: string;
+  investmentId?: string;
+  businessId?: string;
+  amount?: number | null;
+}
+
+export interface HealthThresholds {
+  concentrationThreshold: number;
+  underperformThreshold: number;
+  staleValuationMonths: number;
+  inactivityMonths: number;
+}
+
+export interface HealthReport {
+  issues: HealthIssue[];
+  counts: Record<IssueSeverity, number>;
+  checkedAt: string;
+}
+
+export type TargetScope = 'business' | 'industry';
+
+export interface AllocationTarget {
+  scope: TargetScope;
+  key: string;
+  targetPct: number;
+}
+
+export interface DriftRow {
+  key: string;
+  label: string;
+  targetPct: number | null;
+  actualPct: number;
+  driftPct: number | null;
+  actualValue: number;
+  targetValue: number | null;
+  status: 'on-target' | 'over' | 'under' | 'untargeted';
+  /** Positive means reduce this holding by that much to reach target. */
+  rebalanceAmount: number | null;
+}
+
+export interface DriftReport {
+  scope: TargetScope;
+  totalOutstanding: number;
+  bandPct: number;
+  rows: DriftRow[];
+  totalTargetPct: number;
+  untargetedPct: number;
 }
 
 /* ---------- API envelope ---------- */

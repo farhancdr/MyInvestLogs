@@ -4,6 +4,7 @@
 import { db } from '../db/index.ts';
 import type {
   Business, Investment, Transaction, Valuation, AuditEntry,
+  AllocationTarget, TargetScope,
 } from '../../shared/types.ts';
 
 /* ---------- row shapes ---------- */
@@ -211,4 +212,45 @@ export function insertTransaction(t: Transaction): void {
       (@id, @investmentId, @businessId, @date, @type, @amount, @paymentMethod, @reference,
        @description, @attachment, @adjusts, @adjustmentEffect, @createdAt)`,
   ).run(t);
+}
+
+export const listValuations = (): Valuation[] =>
+  (db().prepare('SELECT * FROM valuations ORDER BY date DESC').all() as ValuationRow[])
+    .map(toValuation);
+
+export function insertValuation(v: Valuation): void {
+  db().prepare(
+    `INSERT INTO valuations (id, investment_id, date, estimated_value, method, confidence, notes)
+     VALUES (@id, @investmentId, @date, @estimatedValue, @method, @confidence, @notes)`,
+  ).run(v);
+}
+
+/* ---------- allocation targets ---------- */
+
+type TargetRow = { scope: string; key: string; target_pct: number };
+
+export const listAllocationTargets = (): AllocationTarget[] =>
+  (db().prepare('SELECT scope, key, target_pct FROM allocation_targets').all() as TargetRow[])
+    .map((r) => ({ scope: r.scope as TargetScope, key: r.key, targetPct: r.target_pct }));
+
+/**
+ * Replaces the targets for one scope wholesale. Editing weights is a
+ * set-shaped operation: leaving stale keys behind would silently keep a target
+ * for a business you removed from the model.
+ */
+export function replaceAllocationTargets(
+  scope: TargetScope,
+  targets: AllocationTarget[],
+  timestamp: string,
+): void {
+  db().prepare('DELETE FROM allocation_targets WHERE scope = ?').run(scope);
+
+  const insert = db().prepare(
+    `INSERT INTO allocation_targets (scope, key, target_pct, updated_at)
+     VALUES (?, ?, ?, ?)`,
+  );
+  for (const t of targets) {
+    if (t.targetPct <= 0) continue; // a zero target is the same as no target
+    insert.run(scope, t.key, t.targetPct, timestamp);
+  }
 }

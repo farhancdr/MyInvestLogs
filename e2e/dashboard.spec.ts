@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { resetSampleData } from './reset.ts';
 
 /**
  * Asserted against the seeded sample set, whose totals are fixed: all its
@@ -6,6 +7,9 @@ import { test, expect, type Page } from '@playwright/test';
  */
 const kpi = (page: Page, label: string) =>
   page.locator(`[data-kpi="${label}"] [data-kpi-value]`);
+
+// Every file starts from identical sample data.
+test.beforeAll(resetSampleData);
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/#/dashboard');

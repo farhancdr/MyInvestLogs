@@ -15,7 +15,9 @@ import { now } from '../src/server/services/dates.ts';
 import * as repo from '../src/server/services/repo.ts';
 import { addMonths } from '../src/shared/calc.ts';
 import { TXN_TYPE, RETURN_MODEL, ADJUSTMENT_EFFECT } from '../src/shared/constants.ts';
-import type { Business, Investment, Transaction } from '../src/shared/types.ts';
+import type {
+  Business, Investment, Transaction, Valuation, AllocationTarget,
+} from '../src/shared/types.ts';
 
 const MARKER = '[sample]';
 
@@ -36,6 +38,8 @@ interface InvestmentPlan {
   principal?: { offset: number; amount: number }[];
   fees?: { offset: number; amount: number; note: string }[];
   loss?: { offset: number; amount: number; note: string };
+  /** Marks recorded against the stake, as month offsets from the start. */
+  marks?: { offset: number; value: number; note: string }[];
 }
 
 interface BusinessPlan {
@@ -61,6 +65,10 @@ const PLAN: BusinessPlan[] = [
         name: 'Padma — opening round', model: RETURN_MODEL.MONTHLY, amount: 500_000,
         date: '2025-01-10', term: 18, monthlyPct: 2, risk: 'Medium',
         profits: { every: 1, count: 18, amount: 10_000, shortAt: 9, shortAmount: 6_000 },
+        marks: [
+          { offset: 13, value: 520_000, note: 'Owner reported trading up on last year' },
+          { offset: 19, value: 560_000, note: 'Second outlet opened' },
+        ],
       },
       {
         name: 'Padma — second round', model: RETURN_MODEL.FIXED, amount: 300_000,
@@ -94,6 +102,7 @@ const PLAN: BusinessPlan[] = [
         date: '2025-01-20', term: 24, promisedPct: 15, risk: 'Low', principalRepayment: true,
         profits: { every: 6, count: 3, amount: 30_000 },
         principal: [{ offset: 12, amount: 200_000 }],
+        marks: [{ offset: 18, value: 560_000, note: 'Machinery depreciated; order book thinner' }],
       },
       {
         name: 'Bengal — dyeing line', model: RETURN_MODEL.CUSTOM, amount: 150_000,
@@ -154,6 +163,7 @@ function seed(): void {
     let businesses = 0;
     let investments = 0;
     let transactions = 0;
+    let valuations = 0;
     let firstProfit: { id: string; date: string } | null = null;
 
     const writeTxn = (
@@ -227,6 +237,20 @@ function seed(): void {
           writeTxn(investmentId, businessId, TXN_TYPE.LOSS,
             addMonths(spec.date, spec.loss.offset), spec.loss.amount, spec.loss.note);
         }
+
+        for (const mark of spec.marks ?? []) {
+          const valuation: Valuation = {
+            id: nextId('valuation'),
+            investmentId,
+            date: addMonths(spec.date, mark.offset),
+            estimatedValue: mark.value,
+            method: 'Business reported',
+            confidence: 'Medium',
+            notes: `${MARKER} ${mark.note}`,
+          };
+          repo.insertValuation(valuation);
+          valuations++;
+        }
       }
     }
 
@@ -249,13 +273,23 @@ function seed(): void {
       transactions++;
     }
 
-    writeAudit('create', 'SampleData', MARKER, { businesses, investments, transactions });
-    return { businesses, investments, transactions };
+    // An intended shape to measure drift against.
+    const targets: AllocationTarget[] = [
+      { scope: 'industry', key: 'Food & Beverage', targetPct: 30 },
+      { scope: 'industry', key: 'Textiles', targetPct: 30 },
+      { scope: 'industry', key: 'Import & Export', targetPct: 15 },
+      { scope: 'industry', key: 'Transport & Logistics', targetPct: 20 },
+    ];
+    repo.replaceAllocationTargets('industry', targets, stamp);
+
+    writeAudit('create', 'SampleData', MARKER, { businesses, investments, transactions, valuations });
+    return { businesses, investments, transactions, valuations };
   });
 
   console.log(
     `Sample data added: ${counts.businesses} businesses, ` +
-    `${counts.investments} investments, ${counts.transactions} transactions.`,
+    `${counts.investments} investments, ${counts.transactions} transactions, ` +
+    `${counts.valuations} valuations, 4 allocation targets.`,
   );
 }
 
@@ -266,6 +300,16 @@ function seed(): void {
 function clear(): void {
   const removed = transaction(() => {
     const like = `%${MARKER}%`;
+    /*
+     * Marks are deleted by their parent, not by their own marker. A valuation
+     * recorded through the UI carries no [sample] tag, and leaving it behind
+     * makes its investment undeletable: the foreign key refuses, and the whole
+     * cleanup fails.
+     */
+    const valuations = db().prepare(
+      `DELETE FROM valuations WHERE notes LIKE ?
+         OR investment_id IN (SELECT id FROM investments WHERE notes LIKE ?)`,
+    ).run(like, like).changes;
     const transactions = db()
       .prepare('DELETE FROM transactions WHERE description LIKE ?').run(like).changes;
     const investments = db()
@@ -273,16 +317,27 @@ function clear(): void {
     const businesses = db()
       .prepare('DELETE FROM businesses WHERE notes LIKE ?').run(like).changes;
 
-    writeAudit('delete', 'SampleData', MARKER, { businesses, investments, transactions });
-    return { businesses, investments, transactions };
+    db().prepare("DELETE FROM allocation_targets WHERE scope = 'industry'").run();
+
+    writeAudit('delete', 'SampleData', MARKER, { businesses, investments, transactions, valuations });
+    return { businesses, investments, transactions, valuations };
   });
 
   console.log(
     `Sample data removed: ${removed.businesses} businesses, ` +
-    `${removed.investments} investments, ${removed.transactions} transactions. ` +
+    `${removed.investments} investments, ${removed.transactions} transactions, ` +
+    `${removed.valuations} valuations. ` +
     'ID counters and audit history are intentionally left as they are.',
   );
 }
 
-if (process.argv.includes('--clear')) clear();
-else seed();
+if (process.argv.includes('--reset')) {
+  // Clear then seed, in that order. Deleting the database file instead would
+  // leave a running server holding a deleted inode and reading zeroes.
+  clear();
+  seed();
+} else if (process.argv.includes('--clear')) {
+  clear();
+} else {
+  seed();
+}

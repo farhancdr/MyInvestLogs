@@ -4,37 +4,71 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Two token families live here.
+ * "Classical" — a warm, editorial system: Cormorant Garamond for headings and
+ * figures, Lora for body, ink on paper with a single gold accent.
  *
- * The shadcn neutral set drives interface surfaces. The chart set is separate
- * and deliberately not derived from it: those eight hues come from a palette
- * validated for both light and dark surfaces — lightness band, chroma floor,
- * colorblind separation, and normal-vision separation all pass in each mode.
- * Restyling the UI must not disturb them, so they are their own tokens.
+ * Fonts are vendored as variable woff2 rather than fetched from a CDN, because
+ * this app is meant to run on your own machine with no network at all.
+ */
+
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('./fonts/cormorant-garamond.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('./fonts/lora.woff2') format('woff2');
+}
+
+/*
+ * Two token families. The interface tokens below carry the Classical palette.
+ * The chart tokens are separate and deliberately not derived from the accent:
+ * those eight hues are validated for both surfaces — lightness band, chroma
+ * floor, colorblind separation and normal-vision separation all pass against
+ * the paper ground and the ink ground alike. Restyling must not disturb them.
  */
 
 :root {
-  --radius: 0.625rem;
+  --radius: 4px;
 
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  /* Paper and ink */
+  --background: #f3f2f2;
+  --foreground: #201f1d;
+  --card: #f3f2f2;
+  --card-foreground: #201f1d;
+  --popover: #eae9e9;
+  --popover-foreground: #201f1d;
+
+  /* Gold is the only accent, and it is used sparingly. */
+  --primary: #b68235;
+  --primary-foreground: #f8f4f4;
+  --secondary: #eae7e7;
+  --secondary-foreground: #201f1d;
+  --muted: #eae7e7;
+  --muted-foreground: #7c7a78;
+  --accent: #f8f4f4;
+  --accent-foreground: #201f1d;
+  --destructive: #9c4a3c;
+  --destructive-foreground: #f8f4f4;
+
+  --border: color-mix(in srgb, #201f1d 16%, transparent);
+  --input: color-mix(in srgb, #201f1d 16%, transparent);
+  --ring: #b68235;
+
+  /* Value direction: desaturated to sit inside the warm palette rather than
+     shouting over it. */
+  --gain: #3d6b45;
+  --loss: #9c4a3c;
+
+  --grid: color-mix(in srgb, #201f1d 10%, transparent);
+  --axis: color-mix(in srgb, #201f1d 22%, transparent);
 
   /* Validated categorical slots — fixed order, never cycled. */
   --chart-1: #2a78d6;
@@ -46,40 +80,45 @@
   --chart-7: #4a3aa7;
   --chart-8: #e34948;
 
-  /* Diverging pair for cash-flow polarity. */
   --flow-in: #2a78d6;
   --flow-out: #e34948;
-
-  /* Value direction in text. Distinct from the series slots on purpose. */
-  --gain: #006300;
-  --loss: #d03b3b;
-
-  --grid: #e1e0d9;
-  --axis: #c3c2b7;
 }
 
+/*
+ * The Classical system specifies a light ground only. Dark is derived from its
+ * own neutral ramp — ink ground, paper text, and the lighter gold step that
+ * clears contrast against it — so the two modes stay one family.
+ */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --background: #201f1d;
+  --foreground: #f3f2f2;
+  --card: #201f1d;
+  --card-foreground: #f3f2f2;
+  --popover: #2d2b2b;
+  --popover-foreground: #f3f2f2;
 
-  /* The same eight hues, re-stepped for the dark surface — not an auto flip. */
+  --primary: #e1ad66;
+  --primary-foreground: #201f1d;
+  --secondary: #2d2b2b;
+  --secondary-foreground: #f3f2f2;
+  --muted: #2d2b2b;
+  --muted-foreground: #a09c9a;
+  --accent: #2d2b2b;
+  --accent-foreground: #f3f2f2;
+  --destructive: #d98a7c;
+  --destructive-foreground: #201f1d;
+
+  --border: color-mix(in srgb, #f3f2f2 18%, transparent);
+  --input: color-mix(in srgb, #f3f2f2 18%, transparent);
+  --ring: #e1ad66;
+
+  --gain: #7fae86;
+  --loss: #d98a7c;
+
+  --grid: color-mix(in srgb, #f3f2f2 10%, transparent);
+  --axis: color-mix(in srgb, #f3f2f2 22%, transparent);
+
+  /* The same eight hues, re-stepped for the ink ground — not an auto flip. */
   --chart-1: #3987e5;
   --chart-2: #d95926;
   --chart-3: #199e70;
@@ -91,12 +130,6 @@
 
   --flow-in: #3987e5;
   --flow-out: #e66767;
-
-  --gain: #0ca30c;
-  --loss: #e66767;
-
-  --grid: #2c2c2a;
-  --axis: #383835;
 }
 
 @theme inline {
@@ -131,22 +164,53 @@
   --color-gain: var(--gain);
   --color-loss: var(--loss);
 
-  --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-sans: 'Lora', Georgia, serif;
+  --font-heading: 'Cormorant Garamond', Georgia, serif;
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 7px;
+  --radius-xl: 10px;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.55;
   }
-  /* Columns of figures must align; standalone numbers should not be forced to. */
+
+  /* Headings are the serif at semibold — its ceiling for interface text. */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+  }
+
+  /* Small caps labels: the system's h6 treatment, reused for column heads. */
+  th {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 10.5px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+
+  /* Figures wear the serif at its normal cut, with lining tabular numerals so
+     columns align and large numbers read as display type rather than text. */
+  .figure {
+    font-family: var(--font-heading);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
   .tabular {
     font-variant-numeric: tabular-nums;
   }

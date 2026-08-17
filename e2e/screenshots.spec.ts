@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { resetSampleData } from './reset.ts';
 
 /**
  * Captures the README images. Not an assertion suite — it exists so the
@@ -31,6 +32,23 @@ for (const theme of ['light', 'dark'] as const) {
     });
   });
 }
+
+// Every file starts from identical sample data.
+test.beforeAll(resetSampleData);
+
+test('health', async ({ page }) => {
+  await page.goto('/#/health');
+  await expect(page.getByText('Concentrated in one business')).toBeVisible();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: shot('health', 'light'), fullPage: true });
+});
+
+test('allocation targets', async ({ page }) => {
+  await page.goto('/#/targets');
+  await expect(page.getByRole('heading', { name: 'Allocation targets' })).toBeVisible();
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: shot('targets', 'light'), fullPage: true });
+});
 
 test('businesses list', async ({ page }) => {
   await page.goto('/#/businesses');
