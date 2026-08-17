@@ -6,7 +6,7 @@
 
 Self-hosted. Your data stays in a SQLite file on your machine.
 
-[![CI](https://github.com/farhancdr/MyInvestLogs/actions/workflows/ci.yml/badge.svg)](https://github.com/farhancdr/MyInvestLogs/actions/workflows/ci.yml)
+[![CI](https://github.com/farhancdr/MyInvestLogs/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/farhancdr/MyInvestLogs/actions/workflows/ci.yml?query=branch%3Amain)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
 ![Tests](https://img.shields.io/badge/tests-41%20unit%20%2B%2026%20e2e-success)
