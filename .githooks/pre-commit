@@ -1,0 +1,4 @@
+#!/bin/sh
+# Blocks committing the database to a public repository.
+# Enable with: npm run guard:install
+exec node scripts/check-visibility.mjs --staged

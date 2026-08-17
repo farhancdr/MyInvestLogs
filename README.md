@@ -41,15 +41,38 @@ This app is built around that distinction. Capital, principal returned, and prof
 
 ---
 
-## Quick start
+## Get your own copy
+
+This is a **template repository**. Don't fork it — a fork of a public repo is always public, and this app commits its database.
+
+**[→ Use this template](https://github.com/farhancdr/personal-invest-tracker/generate)** and choose **Private**.
+
+You get a fresh repository with no shared history. Because `data/tracker.db` is tracked, your own commits become your backup: push from your laptop, clone on any other machine, and every record comes with it. No sync service, no export step, no account anywhere.
 
 ```bash
-git clone https://github.com/farhancdr/personal-invest-tracker.git
-cd personal-invest-tracker
+git clone https://github.com/<you>/<your-private-repo>.git
+cd <your-private-repo>
+npm run guard:install      # blocks committing your data to a public repo
 docker compose up --build
 ```
 
-Open **http://localhost:3000**.
+Open **http://localhost:3000**. Record something, then:
+
+```bash
+git add data/tracker.db && git commit -m "chore: update records" && git push
+```
+
+### The one thing that must stay true
+
+Your repository must be **private**. It holds your complete financial history, and git keeps that history even if you delete the file later.
+
+`npm run guard:install` installs a pre-commit hook that checks your remote's visibility and refuses to commit the database to a public repository. Run `npm run guard` any time to check. If you would rather not track the database at all, `npm run db:untrack` stops tracking it and `npm run dump` writes readable snapshots instead.
+
+## Running it
+
+```bash
+docker compose up --build
+```
 
 To explore with realistic data before entering anything real:
 
@@ -163,7 +186,9 @@ The full specification, the review that shaped it, and every resolved design dec
 
 No authentication, by design. The app binds to `127.0.0.1` and is single-user. Do not expose the port beyond your machine.
 
-**If you fork this, keep your database out of the repository.** `data/tracker.db` holds your complete financial history.
+**Keep your repository private.** `data/tracker.db` is tracked so that cloning restores your records — which means a public repository publishes them. Run `npm run guard:install` once and the pre-commit hook enforces this for you.
+
+The database shipped with this template is empty. It contains the schema and default settings, nothing else.
 
 ## License
 
