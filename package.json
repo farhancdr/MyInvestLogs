@@ -11,7 +11,7 @@
     "dev:server": "tsx watch src/server/index.ts",
     "dev:client": "vite",
     "build": "vite build",
-    "start": "NODE_ENV=production tsx src/server/index.ts",
+    "start": "tsx src/server/index.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -24,7 +24,8 @@
     "guard": "node scripts/check-visibility.mjs",
     "guard:install": "git config core.hooksPath .githooks && node scripts/check-visibility.mjs",
     "db:untrack": "git rm --cached data/tracker.db && printf \"\ndata/tracker.db\n\" >> .gitignore && echo \"Database untracked. It stays on disk; use npm run dump for backups.\"",
-    "seed:reset": "tsx scripts/seed.ts --reset"
+    "seed:reset": "tsx scripts/seed.ts --reset",
+    "app": "npm run build && npm start"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",

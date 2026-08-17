@@ -51,53 +51,138 @@ This app is built around that distinction. Capital, principal returned, and prof
 
 ---
 
+## What you need first
+
+Just one thing: **Node.js**. It's a free program that runs the app on your computer.
+
+| | |
+|---|---|
+| **Node.js 20 or newer** | Required. [Download it here](https://nodejs.org) — take the "LTS" option and click through the installer. |
+| **Git** | Required. It's how your records get backed up. [Download](https://git-scm.com/downloads) — on macOS, running `git --version` once will offer to install it. |
+| **A GitHub account** | Required, and free. [Sign up](https://github.com/signup). |
+| **Docker** | Optional. Only if you'd rather not install Node. See [Running with Docker](#running-with-docker-optional). |
+
+To check what you already have, open **Terminal** (macOS) or **PowerShell** (Windows) and type:
+
+```bash
+node -v
+```
+
+If it prints something like `v22.11.0`, you're set. If it says "command not found", install Node from the link above and try again.
+
+---
+
 ## Get your own copy
 
-This is a **template repository**. Don't fork it — a fork of a public repo is always public, and this app commits its database.
+**1. Create your private copy**
 
-**[→ Use this template](https://github.com/farhancdr/MyInvestLogs/generate)** and choose **Private**.
+Click **[Use this template](https://github.com/farhancdr/MyInvestLogs/generate)**, name it whatever you like, and — this part matters — choose **Private**.
 
-You get a fresh repository with no shared history. Because `data/tracker.db` is tracked, your own commits become your backup: push from your laptop, clone on any other machine, and every record comes with it. No sync service, no export step, no account anywhere.
+> [!WARNING]
+> GitHub selects **Public** by default. Change it to **Private**. This app keeps your records inside the repository, so a public copy would publish every business, amount and date you enter.
 
-```bash
-git clone https://github.com/<you>/<your-private-repo>.git
-cd <your-private-repo>
-npm run guard:install      # blocks committing your data to a public repo
-docker compose up --build
-```
+**2. Download it to your computer**
 
-Open **http://localhost:3000**. Record something, then:
+Copy the two lines below, replacing `<you>` and `<your-repo>` with your GitHub username and the name you chose:
 
 ```bash
-git add data/tracker.db && git commit -m "chore: update records" && git push
+git clone https://github.com/<you>/<your-repo>.git
+cd <your-repo>
 ```
 
-### The one thing that must stay true
-
-Your repository must be **private**. It holds your complete financial history, and git keeps that history even if you delete the file later.
-
-`npm run guard:install` installs a pre-commit hook that checks your remote's visibility and refuses to commit the database to a public repository. Run `npm run guard` any time to check. If you would rather not track the database at all, `npm run db:untrack` stops tracking it and `npm run dump` writes readable snapshots instead.
-
-## Running it
-
-```bash
-docker compose up --build
-```
-
-To explore with realistic data before entering anything real:
-
-```bash
-docker compose run --rm tracker npm run seed        # 5 businesses, 7 investments, 51 transactions
-docker compose run --rm tracker npm run seed:clear  # remove it again
-```
-
-The sample set deliberately includes a short payment, a fee, a defaulted business written off, and a corrected transaction — so you can see how the awkward cases actually render.
-
-### Development
+**3. Install and start it**
 
 ```bash
 npm install
-npm run dev        # Vite on :5173, API on :3000
+npm run app
+```
+
+The first run takes a minute or two. When you see `Investment Tracker API on http://localhost:3000`, open **http://localhost:3000** in your browser.
+
+**4. Turn on the safety check** (once, recommended)
+
+```bash
+npm run guard:install
+```
+
+This refuses to save your records if your repository is ever public.
+
+---
+
+## Everyday use
+
+**Starting it up**
+
+```bash
+npm run app
+```
+
+Then open **http://localhost:3000**. To stop it, press **Ctrl + C** in the terminal.
+
+**Saving your records**
+
+Your data lives in one file, `data/tracker.db`. Committing it is your backup — and it's what lets you pick up on another computer:
+
+```bash
+git add data/tracker.db
+git commit -m "update records"
+git push
+```
+
+On a second machine, `git clone` your repository and everything comes back. No export step, no sync service, no account anywhere but GitHub.
+
+> One caveat: commit from one machine at a time. The database is a single file, so two machines editing it separately cannot be merged.
+
+**Trying it out first**
+
+To see a populated dashboard before entering anything real:
+
+```bash
+npm run seed         # 5 businesses, 7 investments, 51 transactions
+npm run seed:clear   # remove it again
+```
+
+The sample set deliberately includes a short payment, a fee, a defaulted business written off, and a corrected transaction — so you can see how the awkward cases actually look.
+
+---
+
+## Running with Docker (optional)
+
+If you'd rather not install Node, Docker can run everything instead:
+
+```bash
+docker compose up --build
+```
+
+Same address, **http://localhost:3000**. Your database still lives in `data/tracker.db` in the folder, so backing up works exactly the same way.
+
+```bash
+docker compose run --rm tracker npm run seed        # sample data
+docker compose run --rm tracker npm run seed:clear  # remove it
+```
+
+---
+
+## If something goes wrong
+
+**`command not found: npm`** — Node isn't installed, or the terminal was open before you installed it. Close the terminal, open a new one, try again.
+
+**`Error: listen EADDRINUSE: address already in use :::3000`** — the app is already running in another window, or something else is using port 3000. Either close the other window, or start it on a different port:
+
+```bash
+PORT=3001 npm run app
+```
+
+**The page won't load** — check the terminal is still running and shows the `Investment Tracker API on…` line. If you pressed Ctrl + C, the app stopped; run `npm run app` again.
+
+**Your repository is public** — run `npm run guard` to check, and make it private in GitHub under **Settings → General → Change visibility**. If you'd rather not keep records in the repository at all, `npm run db:untrack` stops tracking the database and `npm run dump` writes readable snapshots instead.
+
+---
+
+## For developers
+
+```bash
+npm run dev        # Vite on :5173, API on :3000, both hot-reloading
 npm test           # 59 unit tests — calculation, drift and health rules
 npm run test:e2e   # 52 Playwright tests — the real app in a browser
 npm run typecheck
