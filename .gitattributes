@@ -1,0 +1,7 @@
+# The database is a binary file and must never be text-merged. `npm run update`
+# always resolves it in your favour — an update carries code, never records.
+data/tracker.db binary
+data/dump.sql   text eol=lf
+
+*.woff2         binary
+docs/images/*   binary

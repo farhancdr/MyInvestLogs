@@ -146,6 +146,36 @@ The sample set deliberately includes a short payment, a fee, a defaulted busines
 
 ---
 
+## Getting updates
+
+When a new version is released, one command brings it in:
+
+```bash
+npm run update
+```
+
+Then restart the app:
+
+```bash
+npm run app
+```
+
+That's all. If the update changes how data is stored, your database is upgraded automatically the next time the app starts — your existing records are migrated, not replaced.
+
+**Your records are never part of an update.** The database is set aside before the update and put back afterwards, so nothing that arrives can overwrite what you have entered.
+
+<details>
+<summary>Why not <code>git pull</code>?</summary>
+
+A repository made from a template shares no history with the template, so git has no common ancestor to compare against and refuses a plain `git pull`. `npm run update` handles that, and a few consequences of it:
+
+- The first update needs `--allow-unrelated-histories`; later ones don't.
+- Without a common ancestor, git cannot tell "you edited this file" from "you simply have the older version" — so *every* changed file would look like a conflict. The update therefore prefers the incoming version and prints exactly which files it replaced.
+- If you have customised the code, your version is still in git history and can be recovered. Keep customisations on their own branch if you want them to survive updates cleanly.
+- `data/tracker.db` is excluded from all of the above.
+
+</details>
+
 ## Running with Docker (optional)
 
 If you'd rather not install Node, Docker can run everything instead:
@@ -174,6 +204,8 @@ PORT=3001 npm run app
 ```
 
 **The page won't load** — check the terminal is still running and shows the `Investment Tracker API on…` line. If you pressed Ctrl + C, the app stopped; run `npm run app` again.
+
+**`npm run update` says you have uncommitted changes** — save your work first with `git add -A && git commit -m "my changes"`, then run it again.
 
 **Your repository is public** — run `npm run guard` to check, and make it private in GitHub under **Settings → General → Change visibility**. If you'd rather not keep records in the repository at all, `npm run db:untrack` stops tracking the database and `npm run dump` writes readable snapshots instead.
 

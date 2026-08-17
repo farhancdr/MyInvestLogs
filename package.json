@@ -25,7 +25,8 @@
     "guard:install": "git config core.hooksPath .githooks && node scripts/check-visibility.mjs",
     "db:untrack": "git rm --cached data/tracker.db && printf \"\ndata/tracker.db\n\" >> .gitignore && echo \"Database untracked. It stays on disk; use npm run dump for backups.\"",
     "seed:reset": "tsx scripts/seed.ts --reset",
-    "app": "npm run build && npm start"
+    "app": "npm run build && npm start",
+    "update": "node scripts/update.mjs"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",
