@@ -12,6 +12,7 @@ test.describe('health', () => {
 
   test('reports concentration above the configured limit', async ({ page }) => {
     await expect(page.getByText('Concentrated in one business')).toBeVisible();
+    // Two rounds into Tasnia Knitwear put it at 30.6% of outstanding capital.
     await expect(page.getByText(/above your 30% limit/).first()).toBeVisible();
   });
 
@@ -43,17 +44,18 @@ test.describe('allocation targets', () => {
   });
 
   test('shows actual weight against the seeded target', async ({ page }) => {
-    const row = page.locator('tbody tr').filter({ hasText: 'Food & Beverage' });
-    await expect(row).toContainText('৳800,000');
-    // 800k of 2.4M outstanding is 33.3% against a 30% target: over by 3.3pp,
-    // which is inside the ±5pp band.
-    await expect(row).toContainText('33.3%');
+    // Retail holds 500k of 2.45M outstanding: 20.4% against a 25% target, which
+    // is inside the ±5pp band.
+    const row = page.locator('tbody tr').filter({ hasText: 'Retail' });
+    await expect(row).toContainText('৳500,000');
+    await expect(row).toContainText('20.4%');
     await expect(row).toContainText('On target');
   });
 
   test('flags a holding outside the tolerance band', async ({ page }) => {
-    // Import & Export holds 600k of 2.4M = 25% against a 15% target: +10pp.
-    const row = page.locator('tbody tr').filter({ hasText: 'Import & Export' });
+    // Two rounds into one knitwear business put Textiles at 34.7% of
+    // outstanding capital against a 15% target — nearly 20pp over.
+    const row = page.locator('tbody tr').filter({ hasText: 'Textiles' });
     await expect(row).toContainText('Over');
     await expect(row).toContainText(/shed/);
   });
@@ -68,18 +70,18 @@ test.describe('allocation targets', () => {
   });
 
   test('saves an edited target and recomputes drift', async ({ page }) => {
-    const row = page.locator('tbody tr').filter({ hasText: 'Food & Beverage' });
-    await row.locator('input[type="number"]').fill('10');
+    const row = page.locator('tbody tr').filter({ hasText: 'Retail' });
+    await row.locator('input[type="number"]').fill('5');
     await page.getByRole('button', { name: 'Save targets' }).click();
 
     await expect(page.getByText('Targets saved')).toBeVisible();
-    // 33.3% actual against a 10% target is well outside the band.
+    // 20.4% actual against a 5% target is well outside the band.
     await expect(row).toContainText('Over');
   });
 
   test('switches between industry and business scope', async ({ page }) => {
     await page.getByRole('tab', { name: 'By business' }).click();
-    await expect(page.locator('tbody tr').filter({ hasText: 'Padma Restaurant' })).toBeVisible();
+    await expect(page.locator('tbody tr').filter({ hasText: 'Tasnia Knitwear' })).toBeVisible();
     // No business targets are seeded, so everything is untargeted.
     await expect(page.getByText('No target').first()).toBeVisible();
   });
@@ -88,32 +90,32 @@ test.describe('allocation targets', () => {
 test.describe('valuations', () => {
   test('shows valuation history and unrealized P&L', async ({ page }) => {
     await page.goto('/#/investments');
-    await page.getByRole('cell', { name: 'Padma — opening round' }).click();
+    await page.getByRole('cell', { name: 'Eco resort build' }).click();
 
     await expect(page.getByText('Valuation', { exact: true })).toBeVisible();
-    // Marked at 560,000 against 500,000 outstanding: 60,000 unrealized.
-    await expect(page.locator('[data-summary="Estimated value"]')).toContainText('৳560,000');
-    await expect(page.locator('[data-summary="Unrealized P&L"]')).toContainText('৳60,000');
-    await expect(page.getByText('Second outlet opened')).toBeVisible();
+    // Marked at 300,000 against 250,000 outstanding: 50,000 unrealized.
+    await expect(page.locator('[data-summary="Estimated value"]')).toContainText('৳300,000');
+    await expect(page.locator('[data-summary="Unrealized P&L"]')).toContainText('৳50,000');
+    await expect(page.getByText(/Six cottages complete/)).toBeVisible();
   });
 
   test('records a new valuation', async ({ page }) => {
     await page.goto('/#/investments');
-    await page.getByRole('cell', { name: 'Karnaphuli — fleet share' }).click();
+    await page.getByRole('cell', { name: 'Fulfilment expansion' }).click();
 
     await page.getByRole('button', { name: 'Update valuation' }).click();
-    await page.getByLabel('Estimated value').fill('310000');
+    await page.getByLabel('Estimated value').fill('260000');
     await page.getByRole('button', { name: 'Record valuation' }).click();
 
     await expect(page.getByText('Valuation recorded')).toBeVisible();
-    await expect(page.locator('[data-summary="Estimated value"]')).toContainText('৳310,000');
-    // 310,000 against 250,000 outstanding.
+    await expect(page.locator('[data-summary="Estimated value"]')).toContainText('৳260,000');
+    // 260,000 against 200,000 outstanding.
     await expect(page.locator('[data-summary="Unrealized P&L"]')).toContainText('৳60,000');
   });
 
   test('refuses a future-dated valuation', async ({ page }) => {
     await page.goto('/#/investments');
-    await page.getByRole('cell', { name: 'Meghna — working capital' }).click();
+    await page.getByRole('cell', { name: 'Cold chain trade cycle' }).click();
 
     await page.getByRole('button', { name: 'Update valuation' }).click();
     await page.getByLabel('As of').fill('2099-01-01');
@@ -125,9 +127,10 @@ test.describe('valuations', () => {
 
   test('unrealized P&L is kept out of realized ROI', async ({ page }) => {
     await page.goto('/#/investments');
-    await page.getByRole('cell', { name: 'Padma — opening round' }).click();
+    await page.getByRole('cell', { name: 'Machinery import round' }).click();
 
-    // Realized ROI counts only money received: 174,000 profit on 500,000.
-    await expect(page.locator('[data-summary="Realized ROI"]')).toContainText('34.8%');
+    // Realized ROI counts only money received: 185,200 profit on 500,000. The
+    // 40,000 mark-up sits beside it, never inside it.
+    await expect(page.locator('[data-summary="Realized ROI"]')).toContainText('37.0%');
   });
 });

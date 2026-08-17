@@ -82,7 +82,7 @@ test.describe('mobile', () => {
 
   test('a detail page stays readable on a phone', async ({ page }) => {
     await page.goto('/#/investments');
-    await page.getByRole('cell', { name: 'Padma — opening round' }).click();
+    await page.getByRole('cell', { name: 'Machinery import round' }).click();
 
     await expect(page.locator('[data-summary="Realized ROI"]')).toBeVisible();
     const overflow = await page.evaluate(

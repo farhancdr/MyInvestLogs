@@ -25,7 +25,7 @@ for (const theme of ['light', 'dark'] as const) {
 
     test(`investment detail — ${theme}`, async ({ page }) => {
       await page.goto('/#/investments');
-      await page.getByRole('cell', { name: 'Bengal — machinery expansion' }).click();
+      await page.getByRole('cell', { name: 'Eco resort build' }).click();
       await expect(page.getByText('Expected vs actual')).toBeVisible();
       await page.waitForTimeout(400);
       await page.screenshot({ path: shot('investment-detail', theme), fullPage: true });
@@ -52,7 +52,7 @@ test('allocation targets', async ({ page }) => {
 
 test('businesses list', async ({ page }) => {
   await page.goto('/#/businesses');
-  await expect(page.getByRole('cell', { name: 'Padma Restaurant' })).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'Tasnia Knitwear' })).toBeVisible();
   await page.waitForTimeout(300);
   await page.screenshot({ path: shot('businesses', 'light'), fullPage: true });
 });

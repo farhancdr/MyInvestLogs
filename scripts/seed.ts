@@ -61,86 +61,218 @@ interface BusinessPlan {
 
 const PLAN: BusinessPlan[] = [
   {
-    name: 'Padma Restaurant', stage: 'SME', bank: 'A/C NAME: PADMA RESTAURANT\nBank: City Bank PLC\nBranch: Dhanmondi\nA/C No: 1402345678901\nRouting: 225261733', industry: 'Food & Beverage',
-    owner: 'Rezaul Karim', location: 'Dhanmondi, Dhaka', risk: 'Medium', status: 'Active',
-    start: '2024-11-01', description: 'Casual dining restaurant with 60 covers.',
+    name: 'Tasnia Knitwear', stage: 'Established', industry: 'Textiles',
+    owner: 'Mahmud Hasan', location: 'Gulshan, Dhaka', risk: 'Medium', status: 'Active',
+    start: '2023-04-01',
+    description: 'Imports garments machinery and supplies knitwear factories in Gazipur.',
+    bank: 'A/C NAME: TASNIA KNITWEAR INDUSTRY\nBank: NCC Bank PLC\nBranch: Gulshan\nA/C No: 7021010002144\nRouting: 160261589',
     investments: [
       {
-        name: 'Padma — opening round', structure: 'Trading partner', payoutCycle: 'Monthly', security: ['Cheque', 'Legal agreement'], model: RETURN_MODEL.MONTHLY, amount: 500_000,
-        date: '2025-01-10', term: 18, monthlyPct: 2, risk: 'Medium',
-        profits: { every: 1, count: 18, amount: 10_000, shortAt: 9, shortAmount: 6_000 },
+        // Mudaraba: profit is shared, but a loss falls on the capital provider.
+        name: 'Machinery import round', model: RETURN_MODEL.FIXED, amount: 500_000,
+        date: '2025-01-15', term: 18, promisedPct: 25, risk: 'Medium',
+        structure: 'Mudaraba', payoutCycle: 'Every 2 months',
+        security: ['Cheque', 'Legal agreement'],
+        profits: { every: 2, count: 9, amount: 20_800 },
+        marks: [{ offset: 14, value: 540_000, note: 'Second machine line commissioned' }],
+      },
+      {
+        // A repeat round into a business that has already performed — and the
+        // reason this one business now exceeds the concentration limit.
+        name: 'Second import cycle', model: RETURN_MODEL.FIXED, amount: 250_000,
+        date: '2025-11-01', term: 12, promisedPct: 25, risk: 'Medium',
+        structure: 'Mudaraba', payoutCycle: 'Every 2 months',
+        security: ['Cheque', 'Legal agreement'],
+        profits: { every: 2, count: 4, amount: 10_400 },
+      },
+    ],
+  },
+  {
+    name: 'Meghna Bazar', stage: 'Established', industry: 'Retail',
+    owner: 'Nasim Tanveer', location: 'Tejgaon, Dhaka', risk: 'Medium', status: 'Active',
+    start: '2022-11-01',
+    description: 'Neighbourhood grocery chain running four outlets across Dhaka.',
+    bank: 'A/C NAME: MEGHNA BAZAR\nBank: Dutch-Bangla Bank\nBranch: Tejgaon\nA/C No: 2271100021376\nRouting: 090264485',
+    investments: [
+      {
+        name: 'Stock financing', model: RETURN_MODEL.MONTHLY, amount: 300_000,
+        date: '2025-10-01', term: 15, monthlyPct: 2.5, risk: 'Medium',
+        structure: 'Trading partner', payoutCycle: 'Monthly',
+        security: ['Cheque', 'Legal agreement', 'Guarantor cheque'],
+        // One short month, which is what actually happens.
+        profits: { every: 1, count: 10, amount: 7_500, shortAt: 7, shortAmount: 4_000 },
+      },
+    ],
+  },
+  {
+    name: 'Amar Agro Foods', stage: 'Established', industry: 'Agriculture & Fisheries',
+    owner: 'Rezaul Karim', location: 'Bogura', risk: 'Low', status: 'Active',
+    start: '2021-06-15',
+    description: 'Contract farming and packaged staples, sold through regional distributors.',
+    bank: 'A/C NAME: AMAR AGRO FOODS\nBank: Islami Bank Bangladesh\nBranch: Bogura\nA/C No: 20501230100234\nRouting: 125261402',
+    investments: [
+      {
+        name: 'Seasonal working capital', model: RETURN_MODEL.MONTHLY, amount: 150_000,
+        date: '2025-06-10', term: 18, monthlyPct: 1.7, risk: 'Low',
+        structure: 'Trading partner', payoutCycle: 'Quarterly',
+        security: ['Cheque', 'Legal agreement'],
+        // Accrues monthly, handed over quarterly — the two are not the same thing.
+        profits: { every: 3, count: 4, amount: 7_650 },
+      },
+    ],
+  },
+  {
+    name: 'MedSure Pharma', stage: 'Established', industry: 'Pharmaceuticals',
+    owner: 'Dr. Ayesha Rahman', location: 'Banani, Dhaka', risk: 'Low', status: 'Active',
+    start: '2022-02-01',
+    description: 'Medicine e-commerce and last-mile delivery across three cities.',
+    bank: 'A/C NAME: MEDSURE PHARMA LTD\nBank: BRAC Bank PLC\nBranch: Banani\nA/C No: 2068656930001\nRouting: 060261726',
+    investments: [
+      {
+        name: 'Inventory round', model: RETURN_MODEL.FIXED, amount: 200_000,
+        date: '2025-04-20', term: 24, promisedPct: 19, risk: 'Low',
+        structure: 'Trading partner', payoutCycle: 'Every 6 months',
+        security: ['Legal agreement'],
+        profits: { every: 6, count: 2, amount: 19_000 },
+      },
+    ],
+  },
+  {
+    name: 'Adventure Retreats', stage: 'Emerging', industry: 'Hospitality & Tourism',
+    owner: 'Tanvir Ahmed', location: 'Bandarban', risk: 'High', status: 'Active',
+    start: '2024-08-01',
+    description: 'Premium eco resort. Land is owned outright, which is the real security.',
+    bank: 'A/C NAME: ADVENTURE RETREATS\nBank: City Bank PLC\nBranch: Gulshan\nA/C No: 1402345678901\nRouting: 225261733',
+    investments: [
+      {
+        // Pays once a year, and the deed is held — hence the valuation history.
+        name: 'Eco resort build', model: RETURN_MODEL.FIXED, amount: 250_000,
+        date: '2025-02-05', term: 24, promisedPct: 20, risk: 'High',
+        structure: 'Partnership', payoutCycle: 'Annually', principalRepayment: true,
+        security: ['Cheque', 'Legal agreement', 'Deed'],
+        profits: { every: 12, count: 1, amount: 50_000 },
         marks: [
-          { offset: 13, value: 520_000, note: 'Owner reported trading up on last year' },
-          { offset: 19, value: 560_000, note: 'Second outlet opened' },
+          { offset: 10, value: 275_000, note: 'Land revalued after the access road opened' },
+          { offset: 17, value: 300_000, note: 'Six cottages complete and taking bookings' },
         ],
-      },
-      {
-        name: 'Padma — second round', structure: 'Mudaraba', payoutCycle: 'Quarterly', security: ['Cheque', 'Legal agreement'], model: RETURN_MODEL.FIXED, amount: 300_000,
-        date: '2025-07-15', term: 12, promisedPct: 20, risk: 'Medium',
-        profits: { every: 3, count: 4, amount: 15_000 },
       },
     ],
   },
   {
-    name: 'Meghna Trading', stage: 'Established', bank: 'A/C NAME: MEGHNA TRADING\nBank: Dutch-Bangla Bank\nBranch: Agrabad\nA/C No: 2271100098765\nRouting: 090150496', industry: 'Import & Export',
-    owner: 'Nusrat Jahan', location: 'Chattogram', risk: 'High', status: 'Active',
-    start: '2024-06-15', description: 'Commodity import and wholesale distribution.',
+    name: 'Karnaphuli Frozen', stage: 'Emerging', industry: 'Agriculture & Fisheries',
+    owner: 'Shahidul Alam', location: 'Chattogram', risk: 'High', status: 'Active',
+    start: '2024-05-01',
+    description: 'Buys and cold-chains frozen fish for Dhaka hotels and restaurants.',
+    bank: 'A/C NAME: KARNAPHULI FROZEN\nBank: NCC Bank PLC\nBranch: Khatunganj\nA/C No: 7021010004411\nRouting: 160151589',
     investments: [
       {
-        name: 'Meghna — working capital', structure: 'Trading partner', payoutCycle: 'Per trade', security: ['Cheque', 'Guarantor cheque'], model: RETURN_MODEL.PROFIT_SHARE, amount: 600_000,
-        date: '2025-03-01', risk: 'High',
+        // Profit share: no forecastable return, and it pays per completed trade.
+        name: 'Cold chain trade cycle', model: RETURN_MODEL.PROFIT_SHARE, amount: 200_000,
+        date: '2025-08-01', risk: 'High',
+        structure: 'Trading partner', payoutCycle: 'Per trade',
+        security: ['Cheque'],
         irregular: [
-          { offset: 6, amount: 45_000 }, { offset: 12, amount: 62_000 }, { offset: 16, amount: 38_000 },
+          { offset: 3, amount: 14_500 }, { offset: 6, amount: 21_000 },
+          { offset: 9, amount: 9_800 }, { offset: 11, amount: 17_400 },
         ],
-        fees: [{ offset: 12, amount: 5_000, note: 'Remittance and handling charges' }],
+        fees: [{ offset: 6, amount: 2_500, note: 'Cold storage handling charge' }],
       },
     ],
   },
   {
-    name: 'Bengal Textiles', stage: 'Established', bank: 'A/C NAME: BENGAL TEXTILES LTD\nBank: BRAC Bank PLC\nBranch: Narayanganj\nA/C No: 2068656930442\nRouting: 060671726', industry: 'Textiles',
-    owner: 'Shahidul Alam', location: 'Narayanganj', risk: 'Low', status: 'Active',
-    start: '2023-02-01', description: 'Knitwear unit supplying two export houses.',
+    name: 'Positive Bazar Online', stage: 'Established', industry: 'Retail',
+    owner: 'Monirul Islam', location: 'Dhanmondi, Dhaka', risk: 'Medium', status: 'Active',
+    start: '2023-01-10',
+    description: 'Online grocery storefront with its own delivery fleet.',
+    bank: 'A/C NAME: POSITIVE BAZAR ONLINE\nBank: Dutch-Bangla Bank\nBranch: Dhanmondi\nA/C No: 2271100098765\nRouting: 090150496',
     investments: [
       {
-        name: 'Bengal — machinery expansion', structure: 'Partnership', payoutCycle: 'Every 6 months', security: ['Legal agreement', 'Deed'], model: RETURN_MODEL.FIXED, amount: 800_000,
-        date: '2025-01-20', term: 24, promisedPct: 15, risk: 'Low', principalRepayment: true,
-        profits: { every: 6, count: 3, amount: 30_000 },
-        principal: [{ offset: 12, amount: 200_000 }],
-        marks: [{ offset: 18, value: 560_000, note: 'Machinery depreciated; order book thinner' }],
-      },
-      {
-        name: 'Bengal — dyeing line', structure: 'Lease', payoutCycle: 'Every 2 months', security: ['Legal agreement'], model: RETURN_MODEL.CUSTOM, amount: 150_000,
-        date: '2025-10-01', term: 12, expectedMonthly: 4_000, risk: 'Low',
-        profits: { every: 2, count: 5, amount: 8_000 },
-      },
-    ],
-  },
-  {
-    name: 'Karnaphuli Logistics', stage: 'Emerging', bank: 'A/C NAME: KARNAPHULI LOGISTICS\nBank: NCC Bank\nBranch: Khatunganj\nA/C No: 7021010004411\nRouting: 160151589', industry: 'Transport & Logistics',
-    owner: 'Tanvir Hasan', location: 'Chattogram', risk: 'Medium', status: 'Active',
-    start: '2025-05-01', description: 'Container haulage between port and inland depots.',
-    investments: [
-      {
-        name: 'Karnaphuli — fleet share', structure: 'Lease', payoutCycle: 'Quarterly', security: ['Cheque'], model: RETURN_MODEL.REVENUE_SHARE, amount: 250_000,
-        date: '2025-09-01', risk: 'Medium',
+        // Revenue share: it pays on turnover, so it also has no set expectation.
+        name: 'Fulfilment expansion', model: RETURN_MODEL.REVENUE_SHARE, amount: 200_000,
+        date: '2025-05-15', risk: 'Medium',
+        structure: 'Trading partner', payoutCycle: 'Monthly',
+        security: ['Cheque', 'Legal agreement'],
         irregular: [
-          { offset: 4, amount: 18_000 }, { offset: 8, amount: 22_000 }, { offset: 11, amount: 19_000 },
+          { offset: 2, amount: 4_100 }, { offset: 4, amount: 5_600 },
+          { offset: 6, amount: 3_900 }, { offset: 8, amount: 6_800 },
+          { offset: 10, amount: 5_200 }, { offset: 12, amount: 7_300 },
         ],
       },
     ],
   },
   {
-    name: 'Jamuna Electronics', stage: 'Emerging', bank: 'A/C NAME: JAMUNA ELECTRONICS\nBank: Islami Bank\nBranch: Uttara\nA/C No: 20501230100234\nRouting: 125261402', industry: 'Electronics',
-    owner: 'Farid Uddin', location: 'Uttara, Dhaka', risk: 'High', status: 'Defaulted',
-    start: '2024-09-10', description: 'Consumer electronics retail. Stopped paying in late 2025.',
+    name: 'Bengal Export House', stage: 'SME', industry: 'Import & Export',
+    owner: 'Farid Uddin', location: 'Narayanganj', risk: 'Medium', status: 'Active',
+    start: '2023-09-01',
+    description: 'Exports ready-made garments to buyers in Malaysia and France.',
+    bank: 'A/C NAME: BENGAL EXPORT HOUSE\nBank: BRAC Bank PLC\nBranch: Narayanganj\nA/C No: 2068656930442\nRouting: 060671726',
     investments: [
       {
-        name: 'Jamuna — stock financing', structure: 'Trading partner', payoutCycle: 'Monthly', security: ['Cheque'], model: RETURN_MODEL.MONTHLY, amount: 400_000,
-        date: '2025-05-05', term: 12, monthlyPct: 3, risk: 'High', status: 'Defaulted',
-        // Pays for four months, then stops. Capital is written off with an
-        // explicit Loss: status alone changes no number.
-        profits: { every: 1, count: 4, amount: 12_000 },
-        loss: { offset: 13, amount: 400_000, note: 'Business ceased trading; capital unrecoverable' },
+        name: 'Order finance cycle', model: RETURN_MODEL.FIXED, amount: 300_000,
+        date: '2025-07-01', term: 18, promisedPct: 25, risk: 'Medium',
+        structure: 'Trading partner', payoutCycle: 'Every 4 months',
+        security: ['Cheque', 'Legal agreement'],
+        profits: { every: 4, count: 3, amount: 25_000 },
+        fees: [{ offset: 8, amount: 4_200, note: 'Remittance and documentation charges' }],
+        marks: [{ offset: 11, value: 285_000, note: 'One buyer paying late; marked down' }],
+      },
+    ],
+  },
+  {
+    name: 'Ahmed Motors', stage: 'SME', industry: 'Transport & Logistics',
+    owner: 'Kamrul Ahmed', location: 'Uttara, Dhaka', risk: 'Medium', status: 'Active',
+    start: '2023-03-01',
+    description: 'Imports e-bikes and sells through two showrooms.',
+    bank: 'A/C NAME: AHMED MOTORS\nBank: Islami Bank Bangladesh\nBranch: Uttara\nA/C No: 20501239900112\nRouting: 125150402',
+    investments: [
+      {
+        // Ran its full term and settled cleanly — what a good outcome looks like.
+        name: 'Import cycle 2025', model: RETURN_MODEL.MONTHLY, amount: 100_000,
+        date: '2025-01-05', term: 12, monthlyPct: 2, risk: 'Medium',
+        structure: 'Trading partner', payoutCycle: 'Monthly', principalRepayment: true,
+        status: 'Matured',
+        security: ['Guarantor cheque', 'Legal agreement'],
+        profits: { every: 1, count: 12, amount: 2_000 },
+        principal: [{ offset: 12, amount: 100_000 }],
+      },
+    ],
+  },
+  {
+    name: 'Uttarbanga Batik House', stage: 'Emerging', industry: 'Textiles',
+    owner: 'Sabina Yeasmin', location: 'Rangpur', risk: 'High', status: 'Defaulted',
+    start: '2024-02-01',
+    description: 'Wholesale batik and a single showroom. Stopped paying in early 2026.',
+    bank: 'A/C NAME: UTTARBANGA BATIK HOUSE\nBank: Sonali Bank\nBranch: Rangpur\nA/C No: 3301020045678\nRouting: 200851203',
+    investments: [
+      {
+        /*
+         * Marked Defaulted but no Loss recorded yet — a real intermediate state,
+         * and exactly what the health check exists to catch. Until the write-off
+         * is entered, this capital still inflates the portfolio.
+         */
+        name: 'Showroom expansion', model: RETURN_MODEL.FIXED, amount: 100_000,
+        date: '2025-09-01', term: 12, promisedPct: 25, risk: 'High',
+        structure: 'Trading partner', payoutCycle: 'Monthly', status: 'Defaulted',
+        security: ['Cheque'],
+        profits: { every: 1, count: 4, amount: 2_080 },
+      },
+    ],
+  },
+  {
+    name: 'Gariyal Auto', stage: 'Emerging', industry: 'Transport & Logistics',
+    owner: 'Jahangir Alam', location: 'Mirpur, Dhaka', risk: 'High', status: 'Defaulted',
+    start: '2024-06-01',
+    description: 'Garage and used-car sales. Ceased trading in mid 2026.',
+    bank: 'A/C NAME: GARIYAL AUTO\nBank: One Bank PLC\nBranch: Mirpur\nA/C No: 0102045567788\nRouting: 091260821',
+    investments: [
+      {
+        // Written off properly, so ROI goes negative and the capital leaves.
+        name: 'Workshop equipment lease', model: RETURN_MODEL.CUSTOM, amount: 120_000,
+        date: '2025-10-01', term: 12, expectedMonthly: 3_000, risk: 'High',
+        structure: 'Lease', payoutCycle: 'Monthly', status: 'Defaulted',
+        security: ['Legal agreement'],
+        profits: { every: 1, count: 3, amount: 3_000 },
+        loss: { offset: 9, amount: 120_000, note: 'Garage closed; equipment unrecoverable' },
       },
     ],
   },
@@ -284,10 +416,12 @@ function seed(): void {
 
     // An intended shape to measure drift against.
     const targets: AllocationTarget[] = [
-      { scope: 'industry', key: 'Food & Beverage', targetPct: 30 },
-      { scope: 'industry', key: 'Textiles', targetPct: 30 },
-      { scope: 'industry', key: 'Import & Export', targetPct: 15 },
-      { scope: 'industry', key: 'Transport & Logistics', targetPct: 20 },
+      { scope: 'industry', key: 'Textiles', targetPct: 15 },
+      { scope: 'industry', key: 'Retail', targetPct: 25 },
+      { scope: 'industry', key: 'Agriculture & Fisheries', targetPct: 20 },
+      { scope: 'industry', key: 'Import & Export', targetPct: 10 },
+      { scope: 'industry', key: 'Hospitality & Tourism', targetPct: 15 },
+      { scope: 'industry', key: 'Pharmaceuticals', targetPct: 15 },
     ];
     repo.replaceAllocationTargets('industry', targets, stamp);
 
@@ -298,7 +432,7 @@ function seed(): void {
   console.log(
     `Sample data added: ${counts.businesses} businesses, ` +
     `${counts.investments} investments, ${counts.transactions} transactions, ` +
-    `${counts.valuations} valuations, 4 allocation targets.`,
+    `${counts.valuations} valuations, 6 allocation targets.`,
   );
 }
 

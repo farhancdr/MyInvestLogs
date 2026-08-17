@@ -140,11 +140,18 @@ On a second machine, `git clone` your repository and everything comes back. No e
 To see a populated dashboard before entering anything real:
 
 ```bash
-npm run seed         # 5 businesses, 7 investments, 51 transactions
+npm run seed         # 11 businesses, 12 investments, 79 transactions
 npm run seed:clear   # remove it again
 ```
 
-The sample set deliberately includes a short payment, a fee, a defaulted business written off, and a corrected transaction — so you can see how the awkward cases actually look.
+The sample set is modelled on real private-investment deals, and deliberately covers every case worth seeing:
+
+- all five return models, and every payout cycle from monthly to per-completed-trade
+- deal structures including mudaraba, partnership and lease, each with the security actually held
+- an investment that ran its full term and settled cleanly
+- one business defaulted **and written off**, and one defaulted with the write-off *not yet recorded* — which is what the critical health check catches
+- a short payment, remittance fees, a corrected transaction, and valuations marked both up and down
+- two rounds into the same business, which pushes it past the concentration limit
 
 ---
 
