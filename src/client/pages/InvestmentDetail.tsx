@@ -1,6 +1,12 @@
-import { api, useApi } from '../lib/api.ts';
-import { money, percent, tone } from '../lib/format.ts';
-import { Panel, Badge, SummaryItem, Fact } from '../components/ui.tsx';
+import { ChevronLeft } from 'lucide-react';
+import { api, useApi } from '@/lib/api.ts';
+import { money, percent, tone } from '@/lib/format.ts';
+import { cn } from '@/lib/utils.ts';
+import {
+  Panel, PageHeader, StatusBadge, SummaryItem, Fact, InfoNotice, ErrorNotice, EmptyState,
+} from '@/components/ui.tsx';
+import { Button } from '@/components/ui/button.tsx';
+import { Skeleton } from '@/components/ui/skeleton.tsx';
 import { TXN_TYPE } from '@shared/constants.ts';
 import type {
   Investment, Business, InvestmentMetrics, Transaction, Valuation,
@@ -24,8 +30,8 @@ export function InvestmentDetail({ id, onAddTransaction }: {
     () => api.get(`/investments/${id}`), [id],
   );
 
-  if (loading) return <div className="state">Loading…</div>;
-  if (error) return <div className="notice error">{error}</div>;
+  if (loading) return <Skeleton className="h-64" />;
+  if (error) return <ErrorNotice message={error} />;
   if (!data) return null;
 
   const { investment: inv, metrics: m } = data;
@@ -34,40 +40,58 @@ export function InvestmentDetail({ id, onAddTransaction }: {
 
   return (
     <>
-      <a className="back" href="#/investments">← Investments</a>
-      <div className="page-head">
-        <div>
-          <h1>{inv.name}</h1>
-          <div className="sub">
+      <a
+        href="#/investments"
+        className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      >
+        <ChevronLeft className="size-4" /> Investments
+      </a>
+
+      <PageHeader
+        title={inv.name}
+        subtitle={
+          <>
             {data.business && (
               <>
-                <a href={`#/business/${inv.businessId}`}>{data.business.name}</a>
-                {' · '}
+                <a href={`#/business/${inv.businessId}`} className="underline-offset-2 hover:underline">
+                  {data.business.name}
+                </a>
+                <span>·</span>
               </>
             )}
-            {inv.id} · {inv.returnModel} · <Badge value={inv.status} />
-          </div>
-        </div>
-        <button className="btn" onClick={() => onAddTransaction(inv.id)}>Record transaction</button>
-      </div>
+            <span>{inv.id}</span>
+            <span>·</span>
+            <span>{inv.returnModel}</span>
+            <StatusBadge value={inv.status} />
+          </>
+        }
+        actions={
+          <Button variant="outline" onClick={() => onAddTransaction(inv.id)}>
+            Record transaction
+          </Button>
+        }
+      />
 
       <Panel>
-        <div className="summary">
+        <div className="grid gap-x-4 sm:grid-cols-3 lg:grid-cols-4">
           <SummaryItem label="Initial investment" value={money(m.initialInvestment)} />
           <SummaryItem label="Total deployed" value={money(m.invested)} />
           <SummaryItem label="Principal returned" value={money(m.principalReturned)} />
           <SummaryItem label="Profit received" value={money(m.profitReceived)} />
           <SummaryItem label="Total received" value={money(m.totalReceived)} />
           <SummaryItem label="Capital outstanding" value={money(m.capitalOutstanding)} />
-          <SummaryItem label="Realized ROI" value={percent(m.realizedROI)} valueTone={tone(m.realizedROI)} />
+          <SummaryItem label="Realized ROI" value={percent(m.realizedROI)}
+            valueTone={tone(m.realizedROI)} />
           <SummaryItem label="Expected ROI" value={e ? percent(e.expectedROI) : '—'} />
         </div>
 
         {(m.feesPaid > 0 || m.writtenOff > 0) && (
-          <div className="notice info" style={{ marginTop: 14 }}>
-            {m.feesPaid > 0 && `Fees paid: ${money(m.feesPaid)}. `}
-            {m.writtenOff > 0 && `Capital written off: ${money(m.writtenOff)}. `}
-            Both reduce realized profit; only write-offs reduce capital outstanding.
+          <div className="mt-4">
+            <InfoNotice>
+              {m.feesPaid > 0 && `Fees paid: ${money(m.feesPaid)}. `}
+              {m.writtenOff > 0 && `Capital written off: ${money(m.writtenOff)}. `}
+              Both reduce realized profit; only write-offs reduce capital outstanding.
+            </InfoNotice>
           </div>
         )}
       </Panel>
@@ -75,7 +99,7 @@ export function InvestmentDetail({ id, onAddTransaction }: {
       {/* Profit share and revenue share have no computable expectation (PRD §8). */}
       {e && v ? (
         <Panel title="Expected vs actual">
-          <div className="summary">
+          <div className="grid gap-x-4 sm:grid-cols-3 lg:grid-cols-5">
             <SummaryItem label="Expected profit" value={money(e.expectedProfit)} />
             <SummaryItem label="Actual profit" value={money(v.actual)} valueTone={tone(v.actual)} />
             <SummaryItem label="Variance" value={money(v.variance)} valueTone={tone(v.variance)} />
@@ -85,15 +109,15 @@ export function InvestmentDetail({ id, onAddTransaction }: {
         </Panel>
       ) : (
         <Panel>
-          <div className="notice info">
+          <InfoNotice>
             {inv.returnModel} investments have no computable expected return, so
             expected-versus-actual is not shown. Actual returns are tracked normally.
-          </div>
+          </InfoNotice>
         </Panel>
       )}
 
       <Panel title="Terms">
-        <div className="facts">
+        <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-4">
           <Fact label="Investment date" value={inv.investmentDate} />
           <Fact label="Term" value={inv.investmentTerm ? `${inv.investmentTerm} months` : ''} />
           <Fact label="Maturity" value={inv.maturityDate} />
@@ -106,26 +130,37 @@ export function InvestmentDetail({ id, onAddTransaction }: {
           <Fact label="Risk level" value={inv.riskLevel} />
           <Fact label="Agreement" value={inv.agreementReference} />
         </div>
-        {inv.notes && <p className="na" style={{ marginTop: 12 }}>{inv.notes}</p>}
+        {inv.notes && <p className="mt-3 text-sm text-muted-foreground">{inv.notes}</p>}
       </Panel>
 
       <Panel title="Cash flow timeline" hint="newest first">
         {!data.transactions.length ? (
-          <div className="state">No transactions yet.</div>
+          <EmptyState>No transactions yet.</EmptyState>
         ) : (
-          <ul className="timeline">
+          <ul>
             {data.transactions.map((t) => (
-              <li key={t.id}>
-                <span className="date">{t.date}</span>
-                <span>
+              <li
+                key={t.id}
+                className="grid grid-cols-[100px_1fr_auto] items-baseline gap-3 border-b py-2.5 last:border-0"
+              >
+                <span className="text-sm text-muted-foreground tabular">{t.date}</span>
+                <span className="text-sm">
                   {t.type}
                   {t.description && ` · ${t.description}`}
                   {t.type === TXN_TYPE.ADJUSTMENT && (
-                    <span className="na"> (adjusts {t.adjusts}, {t.adjustmentEffect})</span>
+                    <span className="text-muted-foreground">
+                      {' '}(adjusts {t.adjusts}, {t.adjustmentEffect})
+                    </span>
                   )}
                 </span>
-                <span className={`amount ${t.type === TXN_TYPE.LOSS ? 'neg-ink'
-                  : OUTFLOW.includes(t.type) ? '' : 'pos-ink'}`}>
+                <span
+                  className={cn(
+                    'font-semibold tabular',
+                    t.type === TXN_TYPE.LOSS
+                      ? 'text-loss'
+                      : OUTFLOW.includes(t.type) ? '' : 'text-gain',
+                  )}
+                >
                   {OUTFLOW.includes(t.type) ? '−' : '+'}{money(t.amount)}
                 </span>
               </li>

@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useRoute, navigate } from './lib/router.ts';
-import { api } from './lib/api.ts';
-import { Dashboard } from './pages/Dashboard.tsx';
-import { Businesses } from './pages/Businesses.tsx';
-import { BusinessDetail } from './pages/BusinessDetail.tsx';
-import { Investments } from './pages/Investments.tsx';
-import { InvestmentDetail } from './pages/InvestmentDetail.tsx';
-import { Transactions } from './pages/Transactions.tsx';
-import { BusinessForm, InvestmentForm, TransactionForm } from './components/forms.tsx';
+import { Toaster } from '@/components/ui/sonner.tsx';
+import { Button } from '@/components/ui/button.tsx';
+import { cn } from '@/lib/utils.ts';
+import { useRoute, navigate } from '@/lib/router.ts';
+import { api } from '@/lib/api.ts';
+import { Dashboard } from '@/pages/Dashboard.tsx';
+import { Businesses } from '@/pages/Businesses.tsx';
+import { BusinessDetail } from '@/pages/BusinessDetail.tsx';
+import { Investments } from '@/pages/Investments.tsx';
+import { InvestmentDetail } from '@/pages/InvestmentDetail.tsx';
+import { Transactions } from '@/pages/Transactions.tsx';
+import { BusinessForm, InvestmentForm, TransactionForm } from '@/components/forms.tsx';
 import type { Business, InvestmentMetrics, Page } from '@shared/types.ts';
 
 type Dialog =
@@ -26,7 +29,6 @@ const NAV = [
 export function App() {
   const route = useRoute();
   const [dialog, setDialog] = useState<Dialog>(null);
-  const [toast, setToast] = useState<string | null>(null);
   const [version, setVersion] = useState(0);
 
   // Lists the dialogs need. Reloaded whenever a write bumps the version.
@@ -44,11 +46,6 @@ export function App() {
       .then((page) => setInvestments(page.rows))
       .catch(() => setInvestments([]));
   }, [version]);
-
-  const showToast = useCallback((message: string) => {
-    setToast(message);
-    setTimeout(() => setToast(null), 2600);
-  }, []);
 
   const refresh = useCallback(() => setVersion((v) => v + 1), []);
 
@@ -70,7 +67,7 @@ export function App() {
           : null;
       case 'transactions':
         return <Transactions key={version}
-          onAddTransaction={() => setDialog({ kind: 'transaction' })} onToast={showToast} />;
+          onAddTransaction={() => setDialog({ kind: 'transaction' })} />;
       default:
         return <Dashboard key={version}
           onAddBusiness={() => setDialog({ kind: 'business' })}
@@ -80,31 +77,37 @@ export function App() {
 
   return (
     <>
-      <header className="topbar">
-        <div className="brand">Investment Tracker</div>
-        <nav className="nav">
-          {NAV.map((item) => (
-            <a
-              key={item.path}
-              href={`#${item.path}`}
-              aria-current={item.match.includes(route.name) ? 'page' : undefined}
-            >
-              {item.label}
-            </a>
-          ))}
+      <header className="sticky top-0 z-20 flex h-14 items-center gap-7 border-b bg-card px-6">
+        <span className="font-semibold tracking-tight">Investment Tracker</span>
+        <nav className="flex flex-1 gap-5 overflow-x-auto text-sm">
+          {NAV.map((item) => {
+            const active = item.match.includes(route.name);
+            return (
+              <a
+                key={item.path}
+                href={`#${item.path}`}
+                aria-current={active ? 'page' : undefined}
+                className={cn(
+                  'whitespace-nowrap border-b-2 py-1 transition-colors',
+                  active
+                    ? 'border-foreground text-foreground'
+                    : 'border-transparent text-muted-foreground hover:text-foreground',
+                )}
+              >
+                {item.label}
+              </a>
+            );
+          })}
         </nav>
-        <button className="btn btn-primary" onClick={() => setDialog({ kind: 'transaction' })}>
+        <Button size="sm" onClick={() => setDialog({ kind: 'transaction' })}>
           Record transaction
-        </button>
+        </Button>
       </header>
 
-      <main className="view">{page}</main>
+      <main className="mx-auto max-w-[1240px] p-6">{page}</main>
 
       {dialog?.kind === 'business' && (
-        <BusinessForm
-          onClose={() => setDialog(null)}
-          onSaved={() => { refresh(); showToast('Business added'); }}
-        />
+        <BusinessForm onClose={() => setDialog(null)} onSaved={refresh} />
       )}
 
       {dialog?.kind === 'investment' && (
@@ -112,7 +115,7 @@ export function App() {
           businesses={businesses}
           defaultBusinessId={dialog.businessId}
           onClose={() => setDialog(null)}
-          onSaved={(id) => { refresh(); showToast('Investment recorded'); navigate(`/investment/${id}`); }}
+          onSaved={(id) => { refresh(); navigate(`/investment/${id}`); }}
         />
       )}
 
@@ -121,11 +124,11 @@ export function App() {
           investments={investments}
           defaultInvestmentId={dialog.investmentId}
           onClose={() => setDialog(null)}
-          onSaved={() => { refresh(); showToast('Transaction recorded'); }}
+          onSaved={refresh}
         />
       )}
 
-      {toast && <div className="toast">{toast}</div>}
+      <Toaster />
     </>
   );
 }

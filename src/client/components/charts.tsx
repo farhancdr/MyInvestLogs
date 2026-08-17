@@ -10,30 +10,27 @@ import {
   ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis,
   CartesianGrid, Tooltip, ReferenceLine, Cell,
 } from 'recharts';
-import { money, moneyShort, monthLabel } from '../lib/format.ts';
+import { money, moneyShort, monthLabel } from '@/lib/format.ts';
+import { EmptyState } from '@/components/ui.tsx';
 import type { MonthlyCashFlow, PortfolioPoint, AllocationSlice } from '@shared/types.ts';
 
 const SERIES = [
-  'var(--series-1)', 'var(--series-2)', 'var(--series-3)', 'var(--series-4)',
-  'var(--series-5)', 'var(--series-6)', 'var(--series-7)', 'var(--series-8)',
+  'var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)',
+  'var(--chart-5)', 'var(--chart-6)', 'var(--chart-7)', 'var(--chart-8)',
 ] as const;
 
 const axis = {
-  tick: { fill: 'var(--muted)', fontSize: 11 },
+  tick: { fill: 'var(--muted-foreground)', fontSize: 11 },
   axisLine: { stroke: 'var(--axis)' },
   tickLine: false,
 } as const;
 
-function Empty({ label }: { label: string }) {
-  return <div className="state">{label}</div>;
-}
-
 export function Legend({ items }: { items: { label: string; color: string }[] }) {
   return (
-    <div className="legend">
+    <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
       {items.map((item) => (
-        <span key={item.label}>
-          <i className="swatch" style={{ background: item.color }} />
+        <span key={item.label} className="inline-flex items-center gap-1.5">
+          <i className="size-2.5 shrink-0 rounded-[2px]" style={{ background: item.color }} />
           {item.label}
         </span>
       ))}
@@ -50,18 +47,18 @@ interface TipPayload {
 function MoneyTooltip({ active, label, payload }: TipPayload) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="tooltip">
-      <div className="t-label">{monthLabel(String(label))}</div>
+    <div className="rounded-lg border bg-popover px-2.5 py-2 text-xs shadow-md">
+      <div className="mb-1 text-muted-foreground">{monthLabel(String(label))}</div>
       {payload.map((entry) => (
-        <div className="t-row" key={entry.name}>
-          <span>
+        <div key={entry.name} className="flex items-center justify-between gap-4">
+          <span className="inline-flex items-center gap-1.5">
             <i
-              className="swatch"
-              style={{ background: entry.color ?? entry.fill, marginRight: 6 }}
+              className="size-2.5 shrink-0 rounded-[2px]"
+              style={{ background: entry.color ?? entry.fill }}
             />
             {entry.name}
           </span>
-          <span>{money(Math.abs(entry.value))}</span>
+          <span className="tabular">{money(Math.abs(entry.value))}</span>
         </div>
       ))}
     </div>
@@ -70,7 +67,7 @@ function MoneyTooltip({ active, label, payload }: TipPayload) {
 
 /** Chart 1 — cumulative capital deployed, returned and still outstanding. */
 export function PortfolioTrend({ data }: { data: PortfolioPoint[] }) {
-  if (data.length < 2) return <Empty label="Not enough history yet" />;
+  if (data.length < 2) return <EmptyState>Not enough history yet</EmptyState>;
 
   const series = [
     { key: 'invested', label: 'Invested', color: SERIES[0] },
@@ -80,7 +77,7 @@ export function PortfolioTrend({ data }: { data: PortfolioPoint[] }) {
 
   return (
     <>
-      <div className="chart-frame">
+      <div className="h-[220px] w-full">
         <ResponsiveContainer>
           <LineChart data={data} margin={{ top: 6, right: 8, bottom: 0, left: 8 }}>
             <CartesianGrid stroke="var(--grid)" vertical={false} />
@@ -96,7 +93,7 @@ export function PortfolioTrend({ data }: { data: PortfolioPoint[] }) {
                 stroke={s.color}
                 strokeWidth={2}
                 dot={false}
-                activeDot={{ r: 4, strokeWidth: 2, stroke: 'var(--surface)' }}
+                activeDot={{ r: 4, strokeWidth: 2, stroke: 'var(--card)' }}
               />
             ))}
           </LineChart>
@@ -112,28 +109,28 @@ export function PortfolioTrend({ data }: { data: PortfolioPoint[] }) {
  * the baseline, money out falls below it, so net direction reads at a glance.
  */
 export function CashFlowChart({ data }: { data: MonthlyCashFlow[] }) {
-  if (!data.length) return <Empty label="No cash flow recorded yet" />;
+  if (!data.length) return <EmptyState>No cash flow recorded yet</EmptyState>;
 
   const rows = data.map((d) => ({ month: d.month, In: d.inflow, Out: -d.outflow }));
 
   return (
     <>
-      <div className="chart-frame">
+      <div className="h-[220px] w-full">
         <ResponsiveContainer>
           <BarChart data={rows} margin={{ top: 6, right: 8, bottom: 0, left: 8 }} barGap={2}>
             <CartesianGrid stroke="var(--grid)" vertical={false} />
             <XAxis dataKey="month" tickFormatter={monthLabel} {...axis} minTickGap={40} />
             <YAxis tickFormatter={moneyShort} width={52} {...axis} />
-            <Tooltip content={<MoneyTooltip />} cursor={{ fill: 'var(--plane)' }} />
+            <Tooltip content={<MoneyTooltip />} cursor={{ fill: 'var(--muted)' }} />
             <ReferenceLine y={0} stroke="var(--axis)" />
-            <Bar dataKey="In" fill="var(--pos)" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="Out" fill="var(--neg)" radius={[0, 0, 4, 4]} />
+            <Bar dataKey="In" fill="var(--flow-in)" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="Out" fill="var(--flow-out)" radius={[0, 0, 4, 4]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
       <Legend items={[
-        { label: 'Money in', color: 'var(--pos)' },
-        { label: 'Money out', color: 'var(--neg)' },
+        { label: 'Money in', color: 'var(--flow-in)' },
+        { label: 'Money out', color: 'var(--flow-out)' },
       ]} />
     </>
   );
@@ -141,20 +138,20 @@ export function CashFlowChart({ data }: { data: MonthlyCashFlow[] }) {
 
 /** Chart 4 — profit received per month, coloured by sign. */
 export function MonthlyProfitChart({ data }: { data: MonthlyCashFlow[] }) {
-  if (!data.length) return <Empty label="No profit recorded yet" />;
+  if (!data.length) return <EmptyState>No profit recorded yet</EmptyState>;
 
   return (
-    <div className="chart-frame">
+    <div className="h-[220px] w-full">
       <ResponsiveContainer>
         <BarChart data={data} margin={{ top: 6, right: 8, bottom: 0, left: 8 }}>
           <CartesianGrid stroke="var(--grid)" vertical={false} />
           <XAxis dataKey="month" tickFormatter={monthLabel} {...axis} minTickGap={40} />
           <YAxis tickFormatter={moneyShort} width={52} {...axis} />
-          <Tooltip content={<MoneyTooltip />} cursor={{ fill: 'var(--plane)' }} />
+          <Tooltip content={<MoneyTooltip />} cursor={{ fill: 'var(--muted)' }} />
           <ReferenceLine y={0} stroke="var(--axis)" />
           <Bar dataKey="profit" name="Profit" radius={[4, 4, 0, 0]}>
             {data.map((d) => (
-              <Cell key={d.month} fill={d.profit < 0 ? 'var(--neg)' : 'var(--pos)'} />
+              <Cell key={d.month} fill={d.profit < 0 ? 'var(--flow-out)' : 'var(--flow-in)'} />
             ))}
           </Bar>
         </BarChart>
@@ -170,7 +167,7 @@ export function MonthlyProfitChart({ data }: { data: MonthlyCashFlow[] }) {
  * slots that fall below 3:1 against the surface.
  */
 export function AllocationBar({ data }: { data: AllocationSlice[] }) {
-  if (!data.length) return <Empty label="No capital outstanding" />;
+  if (!data.length) return <EmptyState>No capital outstanding</EmptyState>;
 
   // Fixed slot order, never cycled: a ninth industry folds into "Other".
   const visible = data.slice(0, 7);
@@ -183,28 +180,31 @@ export function AllocationBar({ data }: { data: AllocationSlice[] }) {
 
   return (
     <>
-      <div className="stack">
+      <div className="mb-1 flex h-[30px] w-full gap-0.5">
         {slices.map((slice, i) => (
           <div
             key={slice.label}
             title={`${slice.label}: ${money(slice.value)}`}
-            style={{
-              background: SERIES[i % SERIES.length],
-              flexGrow: slice.value,
-              flexBasis: 0,
-            }}
+            className="min-w-[3px] rounded-[3px]"
+            style={{ background: SERIES[i % SERIES.length], flexGrow: slice.value, flexBasis: 0 }}
           />
         ))}
       </div>
-      <div className="alloc-list">
+      <div className="mt-3 grid gap-0.5">
         {slices.map((slice, i) => (
-          <div key={slice.label}>
-            <i className="swatch" style={{ background: SERIES[i % SERIES.length] }} />
+          <div
+            key={slice.label}
+            className="grid grid-cols-[10px_1fr_auto_auto] items-center gap-2.5 border-b py-1 text-sm"
+          >
+            <i
+              className="size-2.5 shrink-0 rounded-[2px]"
+              style={{ background: SERIES[i % SERIES.length] }}
+            />
             <span>{slice.label}</span>
-            <span className="share">{((slice.value / total) * 100).toFixed(1)}%</span>
-            <span className="num" style={{ fontVariantNumeric: 'tabular-nums' }}>
-              {money(slice.value)}
+            <span className="w-12 text-right text-muted-foreground tabular">
+              {((slice.value / total) * 100).toFixed(1)}%
             </span>
+            <span className="tabular">{money(slice.value)}</span>
           </div>
         ))}
       </div>

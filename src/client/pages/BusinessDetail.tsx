@@ -1,8 +1,13 @@
-import { api, useApi } from '../lib/api.ts';
-import { money, percent, tone } from '../lib/format.ts';
-import { Panel, Badge, SummaryItem, Fact } from '../components/ui.tsx';
-import { InvestmentTable } from '../components/InvestmentTable.tsx';
-import { TransactionTable } from '../components/TransactionTable.tsx';
+import { ChevronLeft } from 'lucide-react';
+import { api, useApi } from '@/lib/api.ts';
+import { money, percent, tone } from '@/lib/format.ts';
+import {
+  Panel, PageHeader, StatusBadge, RiskBadge, SummaryItem, Fact, ErrorNotice,
+} from '@/components/ui.tsx';
+import { InvestmentTable } from '@/components/InvestmentTable.tsx';
+import { TransactionTable } from '@/components/TransactionTable.tsx';
+import { Button } from '@/components/ui/button.tsx';
+import { Skeleton } from '@/components/ui/skeleton.tsx';
 import type {
   Business, PortfolioMetrics, InvestmentMetrics, Transaction,
 } from '@shared/types.ts';
@@ -23,27 +28,29 @@ export function BusinessDetail({ id, onAddInvestment }: {
     () => api.get(`/businesses/${id}`), [id],
   );
 
-  if (loading) return <div className="state">Loading…</div>;
-  if (error) return <div className="notice error">{error}</div>;
+  if (loading) return <Skeleton className="h-64" />;
+  if (error) return <ErrorNotice message={error} />;
   if (!data) return null;
 
   const { business: b, metrics: m } = data;
 
   return (
     <>
-      <a className="back" href="#/businesses">← Businesses</a>
-      <div className="page-head">
-        <div>
-          <h1>{b.name}</h1>
-          <div className="sub">
-            <Badge value={b.status} /> <Badge value={b.riskLevel} />
-          </div>
-        </div>
-        <button className="btn" onClick={() => onAddInvestment(b.id)}>Add investment</button>
-      </div>
+      <a
+        href="#/businesses"
+        className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      >
+        <ChevronLeft className="size-4" /> Businesses
+      </a>
+
+      <PageHeader
+        title={b.name}
+        subtitle={<><StatusBadge value={b.status} /><RiskBadge value={b.riskLevel} /></>}
+        actions={<Button variant="outline" onClick={() => onAddInvestment(b.id)}>Add investment</Button>}
+      />
 
       <Panel>
-        <div className="summary">
+        <div className="grid gap-x-4 sm:grid-cols-3 lg:grid-cols-5">
           <SummaryItem label="Total invested" value={money(m.invested)} />
           <SummaryItem label="Total received" value={money(m.totalReceived)} />
           <SummaryItem label="Profit received" value={money(m.realizedProfit)}
@@ -55,7 +62,7 @@ export function BusinessDetail({ id, onAddInvestment }: {
       </Panel>
 
       <Panel title="Business information">
-        <div className="facts">
+        <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-4">
           <Fact label="Owner / operator" value={b.owner} />
           <Fact label="Contact" value={b.contact} />
           <Fact label="Location" value={b.location} />
@@ -64,8 +71,8 @@ export function BusinessDetail({ id, onAddInvestment }: {
           <Fact label="Business started" value={b.startDate} />
           <Fact label="First invested" value={data.investmentStartDate} />
         </div>
-        {b.description && <p style={{ marginTop: 14 }}>{b.description}</p>}
-        {b.notes && <p className="na" style={{ marginTop: 6 }}>{b.notes}</p>}
+        {b.description && <p className="mt-4 text-sm">{b.description}</p>}
+        {b.notes && <p className="mt-1.5 text-sm text-muted-foreground">{b.notes}</p>}
       </Panel>
 
       <Panel title="Investments">

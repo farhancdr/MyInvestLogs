@@ -1,6 +1,11 @@
 import { useState } from 'react';
-import { navigate } from '../lib/router.ts';
-import { MoneyCell, PercentCell, Badge } from './ui.tsx';
+import { ArrowDown, ArrowUp } from 'lucide-react';
+import { navigate } from '@/lib/router.ts';
+import { cn } from '@/lib/utils.ts';
+import { MoneyText, PercentText, StatusBadge, EmptyState } from '@/components/ui.tsx';
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table.tsx';
 import type { InvestmentMetrics } from '@shared/types.ts';
 
 type SortKey = keyof Pick<
@@ -27,7 +32,7 @@ const COLUMNS: { key: SortKey; label: string; num?: boolean }[] = [
 export function InvestmentTable({ rows }: { rows: InvestmentMetrics[] }) {
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: 'invested', dir: -1 });
 
-  if (!rows.length) return <div className="state">No investments match these filters.</div>;
+  if (!rows.length) return <EmptyState>No investments match these filters.</EmptyState>;
 
   const sorted = [...rows].sort((a, b) => {
     const x = a[sort.key];
@@ -42,42 +47,52 @@ export function InvestmentTable({ rows }: { rows: InvestmentMetrics[] }) {
     setSort((s) => (s.key === key ? { key, dir: (s.dir * -1) as 1 | -1 } : { key, dir: -1 }));
 
   return (
-    <div style={{ overflowX: 'auto' }}>
-      <table>
-        <thead>
-          <tr>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
             {COLUMNS.map((col) => (
-              <th
+              <TableHead
                 key={col.key}
-                className={`sortable${col.num ? ' num' : ''}`}
                 onClick={() => toggle(col.key)}
-                aria-sort={sort.key === col.key ? (sort.dir === 1 ? 'ascending' : 'descending') : 'none'}
+                aria-sort={
+                  sort.key === col.key ? (sort.dir === 1 ? 'ascending' : 'descending') : 'none'
+                }
+                className={cn(
+                  'cursor-pointer select-none whitespace-nowrap hover:text-foreground',
+                  col.num && 'text-right',
+                )}
               >
-                {col.label}
-                {sort.key === col.key ? (sort.dir === 1 ? ' ↑' : ' ↓') : ''}
-              </th>
+                <span className={cn('inline-flex items-center gap-1', col.num && 'flex-row-reverse')}>
+                  {col.label}
+                  {sort.key === col.key
+                    && (sort.dir === 1
+                      ? <ArrowUp className="size-3" />
+                      : <ArrowDown className="size-3" />)}
+                </span>
+              </TableHead>
             ))}
-          </tr>
-        </thead>
-        <tbody>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {sorted.map((row) => (
-            <tr
+            <TableRow
               key={row.investmentId}
-              className="clickable"
+              className="cursor-pointer"
               onClick={() => navigate(`/investment/${row.investmentId}`)}
             >
-              <td>{row.name}</td>
-              <td>{row.businessName ?? ''}</td>
-              <td className="num"><MoneyCell value={row.invested} /></td>
-              <td className="num"><MoneyCell value={row.totalReceived} /></td>
-              <td className="num"><MoneyCell value={row.realizedProfit} /></td>
-              <td className="num"><MoneyCell value={row.capitalOutstanding} /></td>
-              <td className="num"><PercentCell value={row.realizedROI} /></td>
-              <td><Badge value={row.status} /></td>
-            </tr>
+              <TableCell className="font-medium">{row.name}</TableCell>
+              <TableCell className="text-muted-foreground">{row.businessName ?? ''}</TableCell>
+              <TableCell className="text-right tabular"><MoneyText value={row.invested} /></TableCell>
+              <TableCell className="text-right tabular"><MoneyText value={row.totalReceived} /></TableCell>
+              <TableCell className="text-right tabular"><MoneyText value={row.realizedProfit} /></TableCell>
+              <TableCell className="text-right tabular"><MoneyText value={row.capitalOutstanding} /></TableCell>
+              <TableCell className="text-right tabular"><PercentText value={row.realizedROI} /></TableCell>
+              <TableCell><StatusBadge value={row.status} /></TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 }

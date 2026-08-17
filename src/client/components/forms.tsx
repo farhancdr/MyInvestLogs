@@ -1,14 +1,58 @@
-import { useState, useMemo } from 'react';
-import { api, errorMessage } from '../lib/api.ts';
-import { money } from '../lib/format.ts';
-import { Modal, Field, Select, ErrorNotice } from './ui.tsx';
+import { useState, useMemo, type ReactNode } from 'react';
+import { toast } from 'sonner';
+import { api, errorMessage } from '@/lib/api.ts';
+import { money } from '@/lib/format.ts';
+import { InfoNotice, ErrorNotice } from '@/components/ui.tsx';
+import { Button } from '@/components/ui/button.tsx';
+import { Input } from '@/components/ui/input.tsx';
+import { Label } from '@/components/ui/label.tsx';
 import {
-  BUSINESS_STATUSES, INVESTMENT_STATUSES, RISK_LEVELS, PAYMENT_METHODS,
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog.tsx';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select.tsx';
+import {
+  BUSINESS_STATUSES, RISK_LEVELS, PAYMENT_METHODS,
   RETURN_MODELS, RETURN_MODEL, TXN_TYPE,
 } from '@shared/constants.ts';
 import type { Business, InvestmentMetrics } from '@shared/types.ts';
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
+
+function Field({
+  label, children, hint, htmlFor,
+}: { label: string; children: ReactNode; hint?: string; htmlFor?: string }) {
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={htmlFor}>{label}</Label>
+      {children}
+      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+    </div>
+  );
+}
+
+function Choice({
+  value, onChange, options,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: readonly string[] | { value: string; label: string }[];
+}) {
+  const normalized = options.map((o) => (typeof o === 'string' ? { value: o, label: o } : o));
+  return (
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger className="w-full">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {normalized.map((o) => (
+          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
 
 /* ---------- business ---------- */
 
@@ -19,13 +63,13 @@ export function BusinessForm({ onClose, onSaved }: { onClose: () => void; onSave
   });
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-
   const set = (key: string, value: string) => setForm((f) => ({ ...f, [key]: value }));
 
   const submit = async () => {
     setSaving(true);
     try {
       await api.post('/businesses', form);
+      toast.success('Business added');
       onSaved();
       onClose();
     } catch (e) {
@@ -36,54 +80,69 @@ export function BusinessForm({ onClose, onSaved }: { onClose: () => void; onSave
   };
 
   return (
-    <Modal title="Add business" onClose={onClose}>
-      <ErrorNotice message={error} />
-      <Field label="Business name">
-        <input value={form.name} onChange={(e) => set('name', e.target.value)} autoFocus />
-      </Field>
-      <div className="field-row">
-        <Field label="Business type">
-          <input value={form.businessType} onChange={(e) => set('businessType', e.target.value)}
-            placeholder="Restaurant, trading, service…" />
-        </Field>
-        <Field label="Industry" hint="Groups the allocation chart">
-          <input value={form.industry} onChange={(e) => set('industry', e.target.value)} />
-        </Field>
-      </div>
-      <div className="field-row">
-        <Field label="Owner / operator">
-          <input value={form.owner} onChange={(e) => set('owner', e.target.value)} />
-        </Field>
-        <Field label="Contact">
-          <input value={form.contact} onChange={(e) => set('contact', e.target.value)} />
-        </Field>
-      </div>
-      <div className="field-row">
-        <Field label="Location">
-          <input value={form.location} onChange={(e) => set('location', e.target.value)} />
-        </Field>
-        <Field label="Business start date">
-          <input type="date" value={form.startDate} onChange={(e) => set('startDate', e.target.value)} />
-        </Field>
-      </div>
-      <div className="field-row">
-        <Field label="Status">
-          <Select value={form.status} onChange={(v) => set('status', v)} options={BUSINESS_STATUSES} />
-        </Field>
-        <Field label="Risk level" hint="Default for new investments">
-          <Select value={form.riskLevel} onChange={(v) => set('riskLevel', v)} options={RISK_LEVELS} />
-        </Field>
-      </div>
-      <Field label="Description">
-        <textarea rows={2} value={form.description} onChange={(e) => set('description', e.target.value)} />
-      </Field>
-      <div className="modal-actions">
-        <button className="btn" onClick={onClose}>Cancel</button>
-        <button className="btn btn-primary" onClick={submit} disabled={saving}>
-          {saving ? 'Saving…' : 'Save business'}
-        </button>
-      </div>
-    </Modal>
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-[560px]">
+        <DialogHeader><DialogTitle>Add business</DialogTitle></DialogHeader>
+        <ErrorNotice message={error} />
+
+        <div className="space-y-4">
+          <Field label="Business name" htmlFor="bf-name">
+            <Input id="bf-name" value={form.name} onChange={(e) => set('name', e.target.value)} autoFocus />
+          </Field>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Business type" htmlFor="bf-type">
+              <Input id="bf-type" value={form.businessType}
+                onChange={(e) => set('businessType', e.target.value)}
+                placeholder="Restaurant, trading, service…" />
+            </Field>
+            <Field label="Industry" htmlFor="bf-industry" hint="Groups the allocation chart">
+              <Input id="bf-industry" value={form.industry}
+                onChange={(e) => set('industry', e.target.value)} />
+            </Field>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Owner / operator" htmlFor="bf-owner">
+              <Input id="bf-owner" value={form.owner} onChange={(e) => set('owner', e.target.value)} />
+            </Field>
+            <Field label="Contact" htmlFor="bf-contact">
+              <Input id="bf-contact" value={form.contact} onChange={(e) => set('contact', e.target.value)} />
+            </Field>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Location" htmlFor="bf-location">
+              <Input id="bf-location" value={form.location} onChange={(e) => set('location', e.target.value)} />
+            </Field>
+            <Field label="Business start date" htmlFor="bf-start">
+              <Input id="bf-start" type="date" value={form.startDate}
+                onChange={(e) => set('startDate', e.target.value)} />
+            </Field>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Status">
+              <Choice value={form.status} onChange={(v) => set('status', v)} options={BUSINESS_STATUSES} />
+            </Field>
+            <Field label="Risk level" hint="Default for new investments">
+              <Choice value={form.riskLevel} onChange={(v) => set('riskLevel', v)} options={RISK_LEVELS} />
+            </Field>
+          </div>
+
+          <Field label="Description" htmlFor="bf-desc">
+            <Input id="bf-desc" value={form.description} onChange={(e) => set('description', e.target.value)} />
+          </Field>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={submit} disabled={saving}>
+            {saving ? 'Saving…' : 'Save business'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -106,14 +165,13 @@ export function InvestmentForm({
   });
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-
   const set = (key: string, value: string) => setForm((f) => ({ ...f, [key]: value }));
 
   const model = form.returnModel;
   const noExpectation =
     model === RETURN_MODEL.PROFIT_SHARE || model === RETURN_MODEL.REVENUE_SHARE;
 
-  /** Mirrors calcExpectedReturn so the review step matches what gets saved. */
+  /** Mirrors calcExpectedReturn so the review matches what gets saved. */
   const review = useMemo(() => {
     const amount = Number(form.initialInvestment) || 0;
     const term = Number(form.investmentTerm) || 0;
@@ -138,23 +196,25 @@ export function InvestmentForm({
   const submit = async () => {
     setSaving(true);
     try {
-      const payload = {
-        businessId: form.businessId,
-        name: form.name,
-        initialInvestment: form.initialInvestment,
-        investmentDate: form.investmentDate,
-        returnModel: model,
-        investmentTerm: noExpectation ? '' : form.investmentTerm,
-        riskLevel: form.riskLevel,
-        principalRepayment: form.principalRepayment === 'Yes',
-        status: 'Active',
-        promisedReturnPct: model === RETURN_MODEL.FIXED ? form.promisedReturnPct : '',
-        monthlyReturnPct: model === RETURN_MODEL.MONTHLY ? form.monthlyReturnPct : '',
-        expectedMonthlyReturn: model === RETURN_MODEL.CUSTOM ? form.expectedMonthlyReturn : '',
-      };
       const result = await api.post<{ investment: { id: string }; warnings: string[] }>(
-        '/investments', payload,
+        '/investments',
+        {
+          businessId: form.businessId,
+          name: form.name,
+          initialInvestment: form.initialInvestment,
+          investmentDate: form.investmentDate,
+          returnModel: model,
+          investmentTerm: noExpectation ? '' : form.investmentTerm,
+          riskLevel: form.riskLevel,
+          principalRepayment: form.principalRepayment === 'Yes',
+          status: 'Active',
+          promisedReturnPct: model === RETURN_MODEL.FIXED ? form.promisedReturnPct : '',
+          monthlyReturnPct: model === RETURN_MODEL.MONTHLY ? form.monthlyReturnPct : '',
+          expectedMonthlyReturn: model === RETURN_MODEL.CUSTOM ? form.expectedMonthlyReturn : '',
+        },
       );
+      if (result.warnings?.length) toast.warning(result.warnings[0]!);
+      else toast.success('Investment recorded');
       onSaved(result.investment.id);
       onClose();
     } catch (e) {
@@ -166,112 +226,141 @@ export function InvestmentForm({
 
   if (!businesses.length) {
     return (
-      <Modal title="Add investment" onClose={onClose}>
-        <div className="notice info">Add a business first — every investment belongs to one.</div>
-        <div className="modal-actions">
-          <button className="btn" onClick={onClose}>Close</button>
-        </div>
-      </Modal>
+      <Dialog open onOpenChange={(open) => !open && onClose()}>
+        <DialogContent className="sm:max-w-[460px]">
+          <DialogHeader><DialogTitle>Add investment</DialogTitle></DialogHeader>
+          <InfoNotice>Add a business first — every investment belongs to one.</InfoNotice>
+          <DialogFooter><Button variant="outline" onClick={onClose}>Close</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
     );
   }
 
   return (
-    <Modal title="Add investment" onClose={onClose}>
-      <ErrorNotice message={error} />
-      <Field label="Business">
-        <Select
-          value={form.businessId}
-          onChange={(v) => set('businessId', v)}
-          options={businesses.map((b) => ({ value: b.id, label: b.name }))}
-        />
-      </Field>
-      <Field label="Investment name">
-        <input value={form.name} onChange={(e) => set('name', e.target.value)}
-          placeholder="e.g. Second round" />
-      </Field>
-      <div className="field-row">
-        <Field label="Amount">
-          <input type="number" step="0.01" value={form.initialInvestment}
-            onChange={(e) => set('initialInvestment', e.target.value)} />
-        </Field>
-        <Field label="Investment date">
-          <input type="date" value={form.investmentDate}
-            onChange={(e) => set('investmentDate', e.target.value)} />
-        </Field>
-      </div>
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-[560px]">
+        <DialogHeader><DialogTitle>Add investment</DialogTitle></DialogHeader>
+        <ErrorNotice message={error} />
 
-      <Field label="Return model">
-        <Select value={model} onChange={(v) => set('returnModel', v)} options={RETURN_MODELS} />
-      </Field>
+        <div className="space-y-4">
+          <Field label="Business">
+            <Choice
+              value={form.businessId}
+              onChange={(v) => set('businessId', v)}
+              options={businesses.map((b) => ({ value: b.id, label: b.name }))}
+            />
+          </Field>
 
-      {/* Only the fields this model uses are shown, so a stale value cannot be
-          left behind in a field the model ignores. */}
-      {model === RETURN_MODEL.FIXED && (
-        <Field label="Promised annual return %">
-          <input type="number" step="0.01" value={form.promisedReturnPct}
-            onChange={(e) => set('promisedReturnPct', e.target.value)} />
-        </Field>
-      )}
-      {model === RETURN_MODEL.MONTHLY && (
-        <Field label="Monthly return %">
-          <input type="number" step="0.01" value={form.monthlyReturnPct}
-            onChange={(e) => set('monthlyReturnPct', e.target.value)} />
-        </Field>
-      )}
-      {model === RETURN_MODEL.CUSTOM && (
-        <Field label="Expected monthly return">
-          <input type="number" step="0.01" value={form.expectedMonthlyReturn}
-            onChange={(e) => set('expectedMonthlyReturn', e.target.value)} />
-        </Field>
-      )}
-      {noExpectation && (
-        <div className="notice info">
-          {model} returns depend on business performance, so no expected return can be
-          calculated. Record actual distributions as transactions.
-        </div>
-      )}
+          <Field label="Investment name" htmlFor="if-name">
+            <Input id="if-name" value={form.name} onChange={(e) => set('name', e.target.value)}
+              placeholder="e.g. Second round" />
+          </Field>
 
-      <div className="field-row">
-        <Field label="Term (months)">
-          <input type="number" value={form.investmentTerm} disabled={noExpectation}
-            onChange={(e) => set('investmentTerm', e.target.value)} />
-        </Field>
-        <Field label="Risk level">
-          <Select value={form.riskLevel} onChange={(v) => set('riskLevel', v)} options={RISK_LEVELS} />
-        </Field>
-      </div>
-      <Field label="Principal returned at maturity?">
-        <Select value={form.principalRepayment} onChange={(v) => set('principalRepayment', v)}
-          options={['Yes', 'No']} />
-      </Field>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Amount" htmlFor="if-amount">
+              <Input id="if-amount" type="number" step="0.01" value={form.initialInvestment}
+                onChange={(e) => set('initialInvestment', e.target.value)} />
+            </Field>
+            <Field label="Investment date" htmlFor="if-date">
+              <Input id="if-date" type="date" value={form.investmentDate}
+                onChange={(e) => set('investmentDate', e.target.value)} />
+            </Field>
+          </div>
 
-      <Field label="Review">
-        <div className="review">
-          {!review && <div className="k">Enter an amount to preview the expected return.</div>}
-          {review && (
-            <>
-              <div><span className="k">Initial investment</span><span>{money(review.amount)}</span></div>
-              {review.unknown ? (
-                <div><span className="k">Expected return</span><span className="na">Not computable</span></div>
-              ) : (
-                <>
-                  <div><span className="k">Expected monthly return</span><span>{money(review.monthly)}</span></div>
-                  <div><span className="k">Expected total profit</span><span>{money(review.profit)}</span></div>
-                  <div><span className="k">Expected total return</span><span>{money(review.total)}</span></div>
-                </>
-              )}
-            </>
+          <Field label="Return model">
+            <Choice value={model} onChange={(v) => set('returnModel', v)} options={RETURN_MODELS} />
+          </Field>
+
+          {/* Only the fields this model uses are shown, so a stale value cannot
+              be left behind in a field the model ignores. */}
+          {model === RETURN_MODEL.FIXED && (
+            <Field label="Promised annual return %" htmlFor="if-promised">
+              <Input id="if-promised" type="number" step="0.01" value={form.promisedReturnPct}
+                onChange={(e) => set('promisedReturnPct', e.target.value)} />
+            </Field>
           )}
-        </div>
-      </Field>
+          {model === RETURN_MODEL.MONTHLY && (
+            <Field label="Monthly return %" htmlFor="if-monthly">
+              <Input id="if-monthly" type="number" step="0.01" value={form.monthlyReturnPct}
+                onChange={(e) => set('monthlyReturnPct', e.target.value)} />
+            </Field>
+          )}
+          {model === RETURN_MODEL.CUSTOM && (
+            <Field label="Expected monthly return" htmlFor="if-expected">
+              <Input id="if-expected" type="number" step="0.01" value={form.expectedMonthlyReturn}
+                onChange={(e) => set('expectedMonthlyReturn', e.target.value)} />
+            </Field>
+          )}
+          {noExpectation && (
+            <InfoNotice>
+              {model} returns depend on business performance, so no expected return can be
+              calculated. Record actual distributions as transactions.
+            </InfoNotice>
+          )}
 
-      <div className="modal-actions">
-        <button className="btn" onClick={onClose}>Cancel</button>
-        <button className="btn btn-primary" onClick={submit} disabled={saving}>
-          {saving ? 'Saving…' : 'Save investment'}
-        </button>
-      </div>
-    </Modal>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Term (months)" htmlFor="if-term">
+              <Input id="if-term" type="number" value={form.investmentTerm}
+                disabled={noExpectation} onChange={(e) => set('investmentTerm', e.target.value)} />
+            </Field>
+            <Field label="Risk level">
+              <Choice value={form.riskLevel} onChange={(v) => set('riskLevel', v)} options={RISK_LEVELS} />
+            </Field>
+          </div>
+
+          <Field label="Principal returned at maturity?">
+            <Choice value={form.principalRepayment}
+              onChange={(v) => set('principalRepayment', v)} options={['Yes', 'No']} />
+          </Field>
+
+          <Field label="Review">
+            <div className="rounded-md bg-muted p-3 text-sm tabular">
+              {!review && (
+                <span className="text-muted-foreground">
+                  Enter an amount to preview the expected return.
+                </span>
+              )}
+              {review && (
+                <div className="space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Initial investment</span>
+                    <span>{money(review.amount)}</span>
+                  </div>
+                  {review.unknown ? (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Expected return</span>
+                      <span className="text-muted-foreground">Not computable</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Expected monthly return</span>
+                        <span>{money(review.monthly)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Expected total profit</span>
+                        <span>{money(review.profit)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Expected total return</span>
+                        <span>{money(review.total)}</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          </Field>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={submit} disabled={saving}>
+            {saving ? 'Saving…' : 'Save investment'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -304,13 +393,13 @@ export function TransactionForm({
   });
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-
   const set = (key: string, value: string) => setForm((f) => ({ ...f, [key]: value }));
 
   const submit = async () => {
     setSaving(true);
     try {
       await api.post('/transactions', form);
+      toast.success('Transaction recorded');
       onSaved();
       onClose();
     } catch (e) {
@@ -322,65 +411,77 @@ export function TransactionForm({
 
   if (!investments.length) {
     return (
-      <Modal title="Record transaction" onClose={onClose}>
-        <div className="notice info">Add an investment first.</div>
-        <div className="modal-actions">
-          <button className="btn" onClick={onClose}>Close</button>
-        </div>
-      </Modal>
+      <Dialog open onOpenChange={(open) => !open && onClose()}>
+        <DialogContent className="sm:max-w-[460px]">
+          <DialogHeader><DialogTitle>Record transaction</DialogTitle></DialogHeader>
+          <InfoNotice>Add an investment first.</InfoNotice>
+          <DialogFooter><Button variant="outline" onClick={onClose}>Close</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
     );
   }
 
   return (
-    <Modal title="Record transaction" onClose={onClose}>
-      <ErrorNotice message={error} />
-      <Field label="Investment">
-        <Select
-          value={form.investmentId}
-          onChange={(v) => set('investmentId', v)}
-          options={investments.map((i) => ({
-            value: i.investmentId,
-            label: `${i.businessName ? `${i.businessName} — ` : ''}${i.name}`,
-          }))}
-        />
-      </Field>
-      <div className="field-row">
-        <Field label="Date">
-          <input type="date" value={form.date} onChange={(e) => set('date', e.target.value)} />
-        </Field>
-        <Field label="Type">
-          <Select value={form.type} onChange={(v) => set('type', v)}
-            options={[TXN_TYPE.PROFIT, TXN_TYPE.PRINCIPAL_RETURN, TXN_TYPE.INVESTMENT, TXN_TYPE.FEE, TXN_TYPE.LOSS]} />
-        </Field>
-      </div>
-      <div className="field-row">
-        <Field label="Amount">
-          <input type="number" step="0.01" value={form.amount}
-            onChange={(e) => set('amount', e.target.value)} />
-        </Field>
-        <Field label="Payment method">
-          <Select value={form.paymentMethod} onChange={(v) => set('paymentMethod', v)}
-            options={PAYMENT_METHODS} />
-        </Field>
-      </div>
-      <Field label="Reference">
-        <input value={form.reference} onChange={(e) => set('reference', e.target.value)}
-          placeholder="Bank or wallet reference" />
-      </Field>
-      <Field label="Notes">
-        <input value={form.description} onChange={(e) => set('description', e.target.value)} />
-      </Field>
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-[560px]">
+        <DialogHeader><DialogTitle>Record transaction</DialogTitle></DialogHeader>
+        <ErrorNotice message={error} />
 
-      {TYPE_HINTS[form.type] && <div className="notice info">{TYPE_HINTS[form.type]}</div>}
+        <div className="space-y-4">
+          <Field label="Investment">
+            <Choice
+              value={form.investmentId}
+              onChange={(v) => set('investmentId', v)}
+              options={investments.map((i) => ({
+                value: i.investmentId,
+                label: `${i.businessName ? `${i.businessName} — ` : ''}${i.name}`,
+              }))}
+            />
+          </Field>
 
-      <div className="modal-actions">
-        <button className="btn" onClick={onClose}>Cancel</button>
-        <button className="btn btn-primary" onClick={submit} disabled={saving}>
-          {saving ? 'Saving…' : 'Save transaction'}
-        </button>
-      </div>
-    </Modal>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Date" htmlFor="tf-date">
+              <Input id="tf-date" type="date" value={form.date}
+                onChange={(e) => set('date', e.target.value)} />
+            </Field>
+            <Field label="Type">
+              <Choice value={form.type} onChange={(v) => set('type', v)}
+                options={[TXN_TYPE.PROFIT, TXN_TYPE.PRINCIPAL_RETURN, TXN_TYPE.INVESTMENT,
+                  TXN_TYPE.FEE, TXN_TYPE.LOSS]} />
+            </Field>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Amount" htmlFor="tf-amount">
+              <Input id="tf-amount" type="number" step="0.01" value={form.amount}
+                onChange={(e) => set('amount', e.target.value)} />
+            </Field>
+            <Field label="Payment method">
+              <Choice value={form.paymentMethod} onChange={(v) => set('paymentMethod', v)}
+                options={PAYMENT_METHODS} />
+            </Field>
+          </div>
+
+          <Field label="Reference" htmlFor="tf-ref">
+            <Input id="tf-ref" value={form.reference}
+              onChange={(e) => set('reference', e.target.value)}
+              placeholder="Bank or wallet reference" />
+          </Field>
+          <Field label="Notes" htmlFor="tf-desc">
+            <Input id="tf-desc" value={form.description}
+              onChange={(e) => set('description', e.target.value)} />
+          </Field>
+
+          {TYPE_HINTS[form.type] && <InfoNotice>{TYPE_HINTS[form.type]}</InfoNotice>}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={submit} disabled={saving}>
+            {saving ? 'Saving…' : 'Save transaction'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
-
-export { INVESTMENT_STATUSES };

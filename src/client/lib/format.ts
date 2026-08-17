@@ -32,9 +32,10 @@ export function percent(n: number | null | undefined): string {
   return `${n.toFixed(1)}%`;
 }
 
+/** Direction colour for a figure. Neutral at zero — no colour without meaning. */
 export function tone(n: number | null | undefined): string {
   if (n === null || n === undefined || Number.isNaN(n)) return '';
-  return n < 0 ? 'neg-ink' : n > 0 ? 'pos-ink' : '';
+  return n < 0 ? 'text-loss' : n > 0 ? 'text-gain' : '';
 }
 
 /** `2026-03` → `Mar 2026`, for axis and tooltip labels. */

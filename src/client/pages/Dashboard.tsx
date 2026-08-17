@@ -1,20 +1,26 @@
 import { useMemo, useState } from 'react';
-import { api, useApi } from '../lib/api.ts';
-import { money, percent, tone, setCurrency } from '../lib/format.ts';
-import { Panel, Kpi } from '../components/ui.tsx';
-import { PortfolioTrend, CashFlowChart, MonthlyProfitChart, AllocationBar } from '../components/charts.tsx';
-import { InvestmentTable } from '../components/InvestmentTable.tsx';
+import { api, useApi } from '@/lib/api.ts';
+import { money, percent, tone, setCurrency } from '@/lib/format.ts';
+import { Panel, Kpi, PageHeader, ErrorNotice } from '@/components/ui.tsx';
+import { FilterSelect } from '@/components/FilterSelect.tsx';
+import {
+  PortfolioTrend, CashFlowChart, MonthlyProfitChart, AllocationBar,
+} from '@/components/charts.tsx';
+import { InvestmentTable } from '@/components/InvestmentTable.tsx';
+import { Button } from '@/components/ui/button.tsx';
+import { Input } from '@/components/ui/input.tsx';
+import { Skeleton } from '@/components/ui/skeleton.tsx';
 import { INVESTMENT_STATUSES, RETURN_MODELS, RISK_LEVELS } from '@shared/constants.ts';
 import type { DashboardData } from '@shared/types.ts';
+
+const NO_FILTERS = { search: '', businessId: '', status: '', returnModel: '', riskLevel: '' };
 
 export function Dashboard({ onAddBusiness, onAddInvestment }: {
   onAddBusiness: () => void;
   onAddInvestment: () => void;
 }) {
   const { data, error, loading } = useApi<DashboardData>(() => api.get('/dashboard'));
-  const [filters, setFilters] = useState({
-    search: '', businessId: '', status: '', returnModel: '', riskLevel: '',
-  });
+  const [filters, setFilters] = useState(NO_FILTERS);
 
   const rows = useMemo(() => {
     if (!data) return [];
@@ -29,8 +35,21 @@ export function Dashboard({ onAddBusiness, onAddInvestment }: {
     );
   }, [data, filters]);
 
-  if (loading) return <div className="state">Loading…</div>;
-  if (error) return <div className="notice error">{error}</div>;
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-9 w-48" />
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          {Array.from({ length: 5 }, (_, i) => <Skeleton key={i} className="h-[96px]" />)}
+        </div>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Skeleton className="h-[300px]" />
+          <Skeleton className="h-[300px]" />
+        </div>
+      </div>
+    );
+  }
+  if (error) return <ErrorNotice message={error} />;
   if (!data) return null;
 
   setCurrency(data.currency);
@@ -39,22 +58,20 @@ export function Dashboard({ onAddBusiness, onAddInvestment }: {
 
   return (
     <>
-      <div className="page-head">
-        <div>
-          <h1>Portfolio</h1>
-          <div className="sub">
-            {k.activeInvestments} active investment{k.activeInvestments === 1 ? '' : 's'}
-          </div>
-        </div>
-        <div className="row-actions">
-          <button className="btn" onClick={onAddBusiness}>Add business</button>
-          <button className="btn btn-primary" onClick={onAddInvestment}>Add investment</button>
-        </div>
-      </div>
+      <PageHeader
+        title="Portfolio"
+        subtitle={`${k.activeInvestments} active investment${k.activeInvestments === 1 ? '' : 's'}`}
+        actions={
+          <>
+            <Button variant="outline" onClick={onAddBusiness}>Add business</Button>
+            <Button onClick={onAddInvestment}>Add investment</Button>
+          </>
+        }
+      />
 
       {/* Five tiles in Phase 1. Annualized ROI is the sixth and arrives with
           the XIRR work in Phase 2 (PRD §11, §30). */}
-      <div className="kpis">
+      <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <Kpi label="Total Invested" value={money(k.invested)} />
         <Kpi label="Total Received" value={money(k.totalReceived)} />
         <Kpi label="Profit Earned" value={money(k.realizedProfit)} valueTone={tone(k.realizedProfit)} />
@@ -67,7 +84,7 @@ export function Dashboard({ onAddBusiness, onAddInvestment }: {
         />
       </div>
 
-      <div className="grid-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         <Panel title="Portfolio Over Time">
           <PortfolioTrend data={data.charts.portfolioOverTime} />
         </Panel>
@@ -76,7 +93,7 @@ export function Dashboard({ onAddBusiness, onAddInvestment }: {
         </Panel>
       </div>
 
-      <div className="grid-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         <Panel title="Allocation by Industry" hint="by capital outstanding">
           <AllocationBar data={data.charts.allocationByIndustry} />
         </Panel>
@@ -86,33 +103,26 @@ export function Dashboard({ onAddBusiness, onAddInvestment }: {
       </div>
 
       <Panel title="Investments" hint={`${rows.length} shown`}>
-        <div className="filters">
-          <input
-            type="search" placeholder="Search investments…"
-            value={filters.search} onChange={(e) => set('search', e.target.value)}
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <Input
+            type="search"
+            placeholder="Search investments…"
+            className="h-8 w-[220px]"
+            value={filters.search}
+            onChange={(e) => set('search', e.target.value)}
           />
-          <select value={filters.businessId} onChange={(e) => set('businessId', e.target.value)}>
-            <option value="">All businesses</option>
-            {data.businesses.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-          </select>
-          <select value={filters.status} onChange={(e) => set('status', e.target.value)}>
-            <option value="">All statuses</option>
-            {INVESTMENT_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
-          <select value={filters.returnModel} onChange={(e) => set('returnModel', e.target.value)}>
-            <option value="">All return models</option>
-            {RETURN_MODELS.map((m) => <option key={m} value={m}>{m}</option>)}
-          </select>
-          <select value={filters.riskLevel} onChange={(e) => set('riskLevel', e.target.value)}>
-            <option value="">All risk levels</option>
-            {RISK_LEVELS.map((r) => <option key={r} value={r}>{r}</option>)}
-          </select>
-          <button
-            className="btn btn-quiet"
-            onClick={() => setFilters({ search: '', businessId: '', status: '', returnModel: '', riskLevel: '' })}
-          >
-            Clear
-          </button>
+          <FilterSelect
+            value={filters.businessId} onChange={(v) => set('businessId', v)}
+            allLabel="All businesses"
+            options={data.businesses.map((b) => ({ value: b.id, label: b.name }))}
+          />
+          <FilterSelect value={filters.status} onChange={(v) => set('status', v)}
+            allLabel="All statuses" options={INVESTMENT_STATUSES} className="w-[150px]" />
+          <FilterSelect value={filters.returnModel} onChange={(v) => set('returnModel', v)}
+            allLabel="All return models" options={RETURN_MODELS} />
+          <FilterSelect value={filters.riskLevel} onChange={(v) => set('riskLevel', v)}
+            allLabel="All risk levels" options={RISK_LEVELS} className="w-[150px]" />
+          <Button variant="ghost" size="sm" onClick={() => setFilters(NO_FILTERS)}>Clear</Button>
         </div>
         <InvestmentTable rows={rows} />
       </Panel>

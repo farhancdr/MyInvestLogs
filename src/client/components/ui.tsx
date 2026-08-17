@@ -1,47 +1,62 @@
-import { useEffect, type ReactNode } from 'react';
-import { money, percent, tone } from '../lib/format.ts';
+import type { ReactNode } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card.tsx';
+import { Badge as ShadBadge } from '@/components/ui/badge.tsx';
+import { Alert, AlertDescription } from '@/components/ui/alert.tsx';
+import { cn } from '@/lib/utils.ts';
+import { money, percent, tone } from '@/lib/format.ts';
 
 export function Panel({
-  title, hint, children,
-}: { title?: string; hint?: string; children: ReactNode }) {
+  title, hint, children, className,
+}: { title?: string; hint?: string; children: ReactNode; className?: string }) {
   return (
-    <section className="panel">
+    <Card className={cn('mb-4', className)}>
       {title && (
-        <div className="panel-head">
-          <h2>{title}</h2>
-          {hint && <span className="hint">{hint}</span>}
-        </div>
+        <CardHeader className="flex flex-row items-baseline justify-between gap-3 pb-0">
+          <CardTitle className="text-[15px] font-semibold">{title}</CardTitle>
+          {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
+        </CardHeader>
       )}
-      {children}
-    </section>
+      <CardContent className={cn(title ? 'pt-4' : 'pt-6')}>{children}</CardContent>
+    </Card>
   );
 }
 
+/** Stat tile. The value is the point, so it carries the visual weight. */
 export function Kpi({
   label, value, note, valueTone,
 }: { label: string; value: string; note?: string; valueTone?: string }) {
   return (
-    <div className="kpi">
-      <div className="label">{label}</div>
-      <div className={`value ${valueTone ?? ''}`}>{value}</div>
-      {note && <div className="note">{note}</div>}
-    </div>
+    <Card>
+      <CardContent className="p-4">
+        <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
+        <div className={cn('mt-1.5 text-[27px] font-semibold tracking-tight', valueTone)}>
+          {value}
+        </div>
+        {note && <div className="mt-0.5 text-xs text-muted-foreground">{note}</div>}
+      </CardContent>
+    </Card>
   );
 }
 
-export function Badge({ value }: { value: string | null | undefined }) {
+export function StatusBadge({ value }: { value: string | null | undefined }) {
   if (!value) return null;
-  const cls = value === 'Active' ? 'on' : value === 'Defaulted' ? 'off' : '';
-  return <span className={`badge ${cls}`}>{value}</span>;
+  const variant =
+    value === 'Active' ? 'default' : value === 'Defaulted' ? 'destructive' : 'secondary';
+  return <ShadBadge variant={variant}>{value}</ShadBadge>;
+}
+
+export function RiskBadge({ value }: { value: string | null | undefined }) {
+  if (!value) return null;
+  return <ShadBadge variant={value === 'High' ? 'destructive' : 'outline'}>{value}</ShadBadge>;
 }
 
 export function SummaryItem({
   label, value, valueTone,
 }: { label: string; value: string; valueTone?: string }) {
   return (
-    <div className="item">
-      <div className="k">{label}</div>
-      <div className={`v ${valueTone ?? ''}`}>{value}</div>
+    <div className="border-b py-2.5">
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className={cn('mt-0.5 text-[17px] font-semibold tabular', valueTone)}>{value}</div>
     </div>
   );
 }
@@ -50,76 +65,55 @@ export function Fact({ label, value }: { label: string; value: ReactNode }) {
   if (value === null || value === undefined || value === '') return null;
   return (
     <div>
-      <div className="k">{label}</div>
-      <div>{value}</div>
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="text-sm">{value}</div>
     </div>
   );
 }
 
-export function MoneyCell({ value }: { value: number | null }) {
+export function MoneyText({ value }: { value: number | null }) {
   return <span className={tone(value)}>{money(value)}</span>;
 }
 
-export function PercentCell({ value }: { value: number | null }) {
+export function PercentText({ value }: { value: number | null }) {
   return <span className={tone(value)}>{percent(value)}</span>;
-}
-
-export function Modal({
-  title, onClose, children,
-}: { title: string; onClose: () => void; children: ReactNode }) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [onClose]);
-
-  return (
-    <div className="backdrop" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="modal" role="dialog" aria-modal="true" aria-label={title}>
-        <div className="modal-head">
-          <h2>{title}</h2>
-          <button className="icon-btn" onClick={onClose} aria-label="Close">&times;</button>
-        </div>
-        <div className="modal-body">{children}</div>
-      </div>
-    </div>
-  );
-}
-
-export function Field({
-  label, children, hint,
-}: { label: string; children: ReactNode; hint?: string }) {
-  return (
-    <div className="field">
-      <label>{label}</label>
-      {children}
-      {hint && <div className="hint" style={{ color: 'var(--muted)', fontSize: 12, marginTop: 4 }}>{hint}</div>}
-    </div>
-  );
-}
-
-export function Select({
-  value, onChange, options, placeholder,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  options: readonly string[] | { value: string; label: string }[];
-  placeholder?: string;
-}) {
-  const normalized = options.map((o) =>
-    typeof o === 'string' ? { value: o, label: o } : o,
-  );
-  return (
-    <select value={value} onChange={(e) => onChange(e.target.value)}>
-      {placeholder && <option value="">{placeholder}</option>}
-      {normalized.map((o) => (
-        <option key={o.value} value={o.value}>{o.label}</option>
-      ))}
-    </select>
-  );
 }
 
 export function ErrorNotice({ message }: { message: string | null }) {
   if (!message) return null;
-  return <div className="notice error">{message}</div>;
+  return (
+    <Alert variant="destructive" className="mb-3">
+      <AlertDescription>{message}</AlertDescription>
+    </Alert>
+  );
+}
+
+export function InfoNotice({ children }: { children: ReactNode }) {
+  return (
+    <Alert className="mb-3">
+      <AlertDescription>{children}</AlertDescription>
+    </Alert>
+  );
+}
+
+export function PageHeader({
+  title, subtitle, actions,
+}: { title: string; subtitle?: ReactNode; actions?: ReactNode }) {
+  return (
+    <div className="mb-5 flex items-start justify-between gap-4">
+      <div>
+        <h1 className="text-[22px] font-semibold tracking-tight">{title}</h1>
+        {subtitle && (
+          <div className="mt-0.5 flex items-center gap-2 text-sm text-muted-foreground">
+            {subtitle}
+          </div>
+        )}
+      </div>
+      {actions && <div className="flex gap-2">{actions}</div>}
+    </div>
+  );
+}
+
+export function EmptyState({ children }: { children: ReactNode }) {
+  return <div className="py-12 text-center text-sm text-muted-foreground">{children}</div>;
 }

@@ -1,8 +1,17 @@
 import { useState } from 'react';
-import { api, useApi } from '../lib/api.ts';
-import { navigate } from '../lib/router.ts';
-import { money, percent, tone } from '../lib/format.ts';
-import { Panel, Badge, MoneyCell } from '../components/ui.tsx';
+import { api, useApi } from '@/lib/api.ts';
+import { navigate } from '@/lib/router.ts';
+import { money, percent, tone } from '@/lib/format.ts';
+import {
+  Panel, PageHeader, StatusBadge, RiskBadge, EmptyState, ErrorNotice,
+} from '@/components/ui.tsx';
+import { FilterSelect } from '@/components/FilterSelect.tsx';
+import { Button } from '@/components/ui/button.tsx';
+import { Input } from '@/components/ui/input.tsx';
+import { Skeleton } from '@/components/ui/skeleton.tsx';
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table.tsx';
 import { BUSINESS_STATUSES, RISK_LEVELS } from '@shared/constants.ts';
 import type { BusinessSummary, Page } from '@shared/types.ts';
 
@@ -17,76 +26,73 @@ export function Businesses({ onAddBusiness }: { onAddBusiness: () => void }) {
 
   return (
     <>
-      <div className="page-head">
-        <div>
-          <h1>Businesses</h1>
-          <div className="sub">{data?.total ?? 0} total</div>
-        </div>
-        <button className="btn btn-primary" onClick={onAddBusiness}>Add business</button>
-      </div>
+      <PageHeader
+        title="Businesses"
+        subtitle={`${data?.total ?? 0} total`}
+        actions={<Button onClick={onAddBusiness}>Add business</Button>}
+      />
 
-      <div className="filters">
-        <input
-          type="search" placeholder="Search businesses…"
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <Input
+          type="search" placeholder="Search businesses…" className="h-8 w-[220px]"
           value={filters.search} onChange={(e) => set('search', e.target.value)}
         />
-        <select value={filters.status} onChange={(e) => set('status', e.target.value)}>
-          <option value="">All statuses</option>
-          {BUSINESS_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-        </select>
-        <select value={filters.riskLevel} onChange={(e) => set('riskLevel', e.target.value)}>
-          <option value="">All risk levels</option>
-          {RISK_LEVELS.map((r) => <option key={r} value={r}>{r}</option>)}
-        </select>
+        <FilterSelect value={filters.status} onChange={(v) => set('status', v)}
+          allLabel="All statuses" options={BUSINESS_STATUSES} className="w-[150px]" />
+        <FilterSelect value={filters.riskLevel} onChange={(v) => set('riskLevel', v)}
+          allLabel="All risk levels" options={RISK_LEVELS} className="w-[150px]" />
       </div>
 
-      {error && <div className="notice error">{error}</div>}
+      <ErrorNotice message={error} />
 
       <Panel>
-        {loading && <div className="state">Loading…</div>}
+        {loading && <Skeleton className="h-40" />}
         {!loading && !data?.rows.length && (
-          <div className="state">No businesses yet. Add one to get started.</div>
+          <EmptyState>No businesses yet. Add one to get started.</EmptyState>
         )}
         {!loading && !!data?.rows.length && (
-          <div style={{ overflowX: 'auto' }}>
-            <table>
-              <thead>
-                <tr>
-                  <th>Business</th>
-                  <th>Industry</th>
-                  <th>Owner</th>
-                  <th className="num">Investments</th>
-                  <th className="num">Invested</th>
-                  <th className="num">Received</th>
-                  <th className="num">Outstanding</th>
-                  <th className="num">ROI</th>
-                  <th>Risk</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Business</TableHead>
+                  <TableHead>Industry</TableHead>
+                  <TableHead>Owner</TableHead>
+                  <TableHead className="text-right">Investments</TableHead>
+                  <TableHead className="text-right">Invested</TableHead>
+                  <TableHead className="text-right">Received</TableHead>
+                  <TableHead className="text-right">Outstanding</TableHead>
+                  <TableHead className="text-right">ROI</TableHead>
+                  <TableHead>Risk</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {data.rows.map((b) => (
-                  <tr key={b.businessId} className="clickable"
-                    onClick={() => navigate(`/business/${b.businessId}`)}>
-                    <td>{b.name}</td>
-                    <td>{b.industry}</td>
-                    <td>{b.owner}</td>
-                    <td className="num">{b.investmentCount}</td>
-                    <td className="num">{money(b.invested)}</td>
-                    <td className="num">{money(b.totalReceived)}</td>
-                    <td className="num">{money(b.capitalOutstanding)}</td>
-                    <td className={`num ${tone(b.realizedROI)}`}>{percent(b.realizedROI)}</td>
-                    <td><Badge value={b.riskLevel} /></td>
-                    <td><Badge value={b.status} /></td>
-                  </tr>
+                  <TableRow
+                    key={b.businessId}
+                    className="cursor-pointer"
+                    onClick={() => navigate(`/business/${b.businessId}`)}
+                  >
+                    <TableCell className="font-medium">{b.name}</TableCell>
+                    <TableCell className="text-muted-foreground">{b.industry}</TableCell>
+                    <TableCell className="text-muted-foreground">{b.owner}</TableCell>
+                    <TableCell className="text-right tabular">{b.investmentCount}</TableCell>
+                    <TableCell className="text-right tabular">{money(b.invested)}</TableCell>
+                    <TableCell className="text-right tabular">{money(b.totalReceived)}</TableCell>
+                    <TableCell className="text-right tabular">{money(b.capitalOutstanding)}</TableCell>
+                    <TableCell className={`text-right tabular ${tone(b.realizedROI)}`}>
+                      {percent(b.realizedROI)}
+                    </TableCell>
+                    <TableCell><RiskBadge value={b.riskLevel} /></TableCell>
+                    <TableCell><StatusBadge value={b.status} /></TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         )}
       </Panel>
     </>
   );
 }
-
-export { MoneyCell };

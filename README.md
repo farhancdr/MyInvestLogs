@@ -2,7 +2,7 @@
 
 A private tracker for investments in small businesses, private ventures and partnerships. Implements `prd.md`, Phase 1 scope (§30).
 
-React + Vite frontend, Hono API, SQLite. Runs locally in Docker. Not deployed anywhere.
+React + Vite frontend with shadcn/ui, Hono API, SQLite. Runs locally in Docker. Not deployed anywhere.
 
 ---
 
@@ -76,8 +76,11 @@ src/
     services/    ids, audit, dates, validation, repo, metrics
     routes/      HTTP API
   client/
-    lib/         fetch wrapper, hash router, formatting
-    components/  charts, tables, forms, primitives
+    index.css    Tailwind theme: shadcn tokens + the validated chart palette
+    lib/         fetch wrapper, hash router, formatting, cn()
+    components/
+      ui/        shadcn components (owned source — edit freely)
+      …          charts, tables, forms, app primitives
     pages/       dashboard, businesses, investments, transactions
 
 test/            calculation-layer tests
@@ -141,9 +144,21 @@ Per §30 these belong to later phases. The tables exist so no migration is neede
 
 ---
 
-## Charts
+## Interface
 
-Colors come from a palette validated for both light and dark surfaces: lightness band, chroma floor, colorblind separation, and normal-vision separation all pass in both modes. Three light-mode slots fall below 3:1 contrast against the surface, so the allocation chart carries visible value labels and the investment table doubles as the table view.
+Built on **shadcn/ui** (new-york style, neutral base, Radix primitives). Components live in `src/client/components/ui/` as owned source — edit them directly rather than fighting a dependency. Add more with:
+
+```bash
+npx shadcn@latest add <component>
+```
+
+Theme follows the OS light/dark setting. shadcn switches on a `.dark` class, so `main.tsx` mirrors `prefers-color-scheme` onto the root element.
+
+### Charts
+
+Chart colors are **deliberately not** derived from the shadcn theme. They come from a palette validated for both surfaces: lightness band, chroma floor, colorblind separation, and normal-vision separation all pass in each mode. They live as their own `--chart-*` tokens so restyling the interface cannot disturb them.
+
+Three light-mode slots fall below 3:1 contrast against the surface, so the allocation chart carries visible value labels and the investment table doubles as the table view.
 
 Series slots are assigned in fixed order and never cycled — a ninth industry folds into "Other" rather than inventing a hue.
 

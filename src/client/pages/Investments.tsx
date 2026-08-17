@@ -1,6 +1,8 @@
-import { api, useApi } from '../lib/api.ts';
-import { Panel } from '../components/ui.tsx';
-import { InvestmentTable } from '../components/InvestmentTable.tsx';
+import { api, useApi } from '@/lib/api.ts';
+import { Panel, PageHeader, ErrorNotice } from '@/components/ui.tsx';
+import { InvestmentTable } from '@/components/InvestmentTable.tsx';
+import { Button } from '@/components/ui/button.tsx';
+import { Skeleton } from '@/components/ui/skeleton.tsx';
 import type { InvestmentMetrics, Page } from '@shared/types.ts';
 
 export function Investments({ onAddInvestment }: { onAddInvestment: () => void }) {
@@ -8,18 +10,16 @@ export function Investments({ onAddInvestment }: { onAddInvestment: () => void }
 
   return (
     <>
-      <div className="page-head">
-        <div>
-          <h1>Investments</h1>
-          <div className="sub">{data?.total ?? 0} total</div>
-        </div>
-        <button className="btn btn-primary" onClick={onAddInvestment}>Add investment</button>
-      </div>
+      <PageHeader
+        title="Investments"
+        subtitle={`${data?.total ?? 0} total`}
+        actions={<Button onClick={onAddInvestment}>Add investment</Button>}
+      />
 
-      {error && <div className="notice error">{error}</div>}
+      <ErrorNotice message={error} />
 
       <Panel>
-        {loading ? <div className="state">Loading…</div> : <InvestmentTable rows={data?.rows ?? []} />}
+        {loading ? <Skeleton className="h-40" /> : <InvestmentTable rows={data?.rows ?? []} />}
       </Panel>
     </>
   );

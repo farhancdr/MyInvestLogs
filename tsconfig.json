@@ -20,7 +20,7 @@
     "paths": {
       "@shared/*": ["src/shared/*"],
       "@server/*": ["src/server/*"],
-      "@client/*": ["src/client/*"]
+      "@/*": ["src/client/*"]
     }
   },
   "include": ["src", "test", "scripts", "vite.config.ts"]
